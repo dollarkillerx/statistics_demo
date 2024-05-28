@@ -20,3 +20,7 @@
   - 顺市行情退出：
     - 当最新逆行情单出现盈利时
   - 再次进场: sleep 4h
+
+### MetaQuotes Ltd 公司是傻逼这文档写的真好 太好了
+https://www.mql5.com/zh/docs/python_metatrader5
+
