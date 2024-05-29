@@ -21,6 +21,9 @@ class MT5utils:
                     df = pd.DataFrame(list(account_info_dict.items()), columns=['property', 'value'])
                     print("account_info() as dataframe:")
                     print(df)
+        print(mt5.terminal_info())
+        # get data on MetaTrader 5 version
+        print(mt5.version())
 
     def shutdown(self):
         mt5.shutdown()
@@ -134,10 +137,13 @@ class MT5utils:
             exit(1)
 
     # 持仓订单
-    def positions_total(self):
-        return mt5.positions_total()
+    def positions_total(self, magic=0):
+        if magic == 0:
+            return mt5.positions_total()
+        return len(self.positions_get(magic=magic))
 
-    def positions_get(self, symbol="SYMBOL", magic=0):
+    # 获取当前持仓  获取当ea的持仓 mt5.positions_get(magic=mt5.magic)
+    def positions_get(self, symbol="", magic=0):
         # ticket: id
         # time: unix
         # type: 0buy 1sell
@@ -149,12 +155,20 @@ class MT5utils:
         # price_current 当前价格
         # swap 库存费
         # comment
-        positions = mt5.positions_get(symbol=symbol)
-        if positions is None:
-            raise ValueError("error: {}".format(mt5.last_error()))
+        positions = ()
+        if symbol != "":
+            symbol = self._get_currency_name(symbol)
+            positions = mt5.positions_get(symbol=symbol)
+            if positions is None:
+                raise ValueError("error: {} {}".format(mt5.last_error(), symbol))
+        else:
+            positions = mt5.positions_get()
+            if positions is None:
+                raise ValueError("error: {} {}".format(mt5.last_error(), symbol))
 
         if magic == 0:
             return positions
         filtered_positions = [pos for pos in positions if pos.magic == magic]
 
         return filtered_positions
+

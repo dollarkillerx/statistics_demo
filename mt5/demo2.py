@@ -13,10 +13,19 @@ if __name__ == '__main__':
     # mt5.sell(symbol, 0.02, "sell_1")
     # print(mt5.positions_total())
     # EURUSDzのポジションを取得する
+    # print(mt5.positions_total())
+    # USDCHFのポジションを取得する
 
-    positions = mt5.positions_get(symbol='EURUSDz',magic=mt5.magic)
+    positions = mt5.positions_get(symbol="EURUSD", magic=mt5.magic)
     for ps in positions:
         print(ps.ticket)
+
+    positions = mt5.positions_get(magic=mt5.magic)
+    for ps in positions:
+        print(ps.ticket)
+
+    print(mt5.positions_total(magic=mt5.magic))
+    print(mt5.positions_total())
 
     # positions=a5.positions_get(symbol="EURUSDz")
     # if positions==None:
@@ -45,6 +54,4 @@ if __name__ == '__main__':
     #     df['time'] = pd.to_datetime(df['time'], unit='s')
     #     df.drop(['time_update', 'time_msc', 'time_update_msc', 'external_id'], axis=1, inplace=True)
     # print(df)
-
-
-mt5.shutdown()
+    mt5.shutdown()
