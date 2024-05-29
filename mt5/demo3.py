@@ -12,5 +12,5 @@ if __name__ == '__main__':
     # mt5.buy("USDJPY",0.1,"1")
     print(mt5.profit(magic=mt5.magic))
 
-    print(a5.positions_get(ticket=233068760))
+    print(a5.positions_get(ticket=233068760)[0].volume)
 

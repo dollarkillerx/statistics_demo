@@ -59,9 +59,11 @@ class MT5utils:
         return symbol_info
 
     # buy 市价
-    def buy(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=30):
+    def buy(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
         try:
-            point = self._get_symbol_info(symbol)
+            if deviation == 0:
+                deviation = self.deviation
+            point = self._get_symbol_info(symbol).point
             price = mt5.symbol_info_tick(self._get_currency_name(symbol)).ask
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
@@ -99,9 +101,11 @@ class MT5utils:
             exit(1)
 
     # sell 市价
-    def sell(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=30):
+    def sell(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
         try:
-            point = self._get_symbol_info(symbol)
+            if deviation == 0:
+                deviation = self.deviation
+            point = self._get_symbol_info(symbol).point
             price = mt5.symbol_info_tick(self._get_currency_name(symbol)).bid
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
@@ -188,25 +192,59 @@ class MT5utils:
         return profit
 
     # 关闭订单
-    def close(self,orderId):
-        mt5.positions_get(ticket=orderId)
+    def close(self, orderId, deviation=0):
+        if deviation == 0:
+            deviation = self.deviation
+        positions = mt5.positions_get(ticket=orderId)
+        if positions is None:
+            raise ValueError("positions not found {}".format(orderId))
+        if len(positions) != 1:
+            raise ValueError("positions not found {}".format(orderId))
+        position = positions[0]
 
+        point = mt5.symbol_info(position.symbol).point
+        symbol_info_tick = mt5.symbol_info_tick(position.symbol)
 
-        # position_id=result.order
-        # price=mt5.symbol_info_tick(symbol).bid
-        # deviation=20
-        # request={
-        #     "action": mt5.TRADE_ACTION_DEAL,
-        #     "symbol": symbol,
-        #     "volume": lot,
-        #     "type": mt5.ORDER_TYPE_SELL,
-        #     "position": position_id,
-        #     "price": price,
-        #     "deviation": deviation,
-        #     "magic": 234000,
-        #     "comment": "python script close",
-        #     "type_time": mt5.ORDER_TIME_GTC,
-        #     "type_filling": mt5.ORDER_FILLING_RETURN,
-        # }
-        # # 取引リクエストを送信する
-        # result=mt5.order_send(request)
+        bid_price = symbol_info_tick.bid
+        ask_price = symbol_info_tick.ask
+        price = 0
+        type = mt5.ORDER_TYPE_SELL
+
+        if position.type == 0:
+            # buy
+            price = bid_price
+            type = mt5.ORDER_TYPE_SELL
+        else:
+            # sell
+            price = ask_price
+            type = mt5.ORDER_TYPE_BUY
+
+        request = {
+            "action": mt5.TRADE_ACTION_DEAL,
+            "symbol": position.symbol,
+            "volume": position.volume,
+            "type": type,
+            "position": position.ticket,  # 订单号
+            "price": price,
+            "deviation": deviation,
+            "magic": self.magic,
+            "comment": position.comment,
+            "type_time": mt5.ORDER_TIME_GTC,  # 订单将一直保留在队列中，直到手动取消
+            "type_filling": mt5.ORDER_FILLING_FOK,  # 不满足条件不执行
+        }
+        result = mt5.order_send(request)
+        print("[close] {} {} {} lots at {} with deviation={} points".format(position.ticket, position.symbol,
+                                                                            position.volume, price, deviation))
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            print("order_send failed, retcode={}".format(result.retcode))
+            # 请求词典结果并逐个元素显示
+            result_dict = result._asdict()
+            for field in result_dict.keys():
+                print("   {}={}".format(field, result_dict[field]))
+                # if this is a trading request structure, display it element by element as well
+                if field == "request":
+                    traderequest_dict = result_dict[field]._asdict()
+                    for tradereq_filed in traderequest_dict:
+                        print(
+                            "       traderequest: {}={}".format(tradereq_filed, traderequest_dict[tradereq_filed]))
+            raise ValueError("order_send failed, retcode={}".format(result.retcode))
