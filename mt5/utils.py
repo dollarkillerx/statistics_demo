@@ -78,9 +78,9 @@ class MT5utils:
                 "type_filling": mt5.ORDER_FILLING_FOK,  # 不满足条件不执行
             }
             if sl != 0:
-                request.sl = price - sl * point
+                request['sl'] = price - sl * point * 10
             if tp != 0:
-                request.tp = price + tp * point
+                request['tp'] = price + tp * point * 10
             result = mt5.order_send(request)
             print("[buy] {} {} lots at {} with deviation={} points".format(symbol, volume, price, deviation))
             if result.retcode != mt5.TRADE_RETCODE_DONE:
@@ -120,9 +120,9 @@ class MT5utils:
                 "type_filling": mt5.ORDER_FILLING_FOK,  # 不满足条件不执行
             }
             if sl != 0:
-                request.sl = price + sl * point
+                request['sl'] = price + sl * point * 10
             if tp != 0:
-                request.tp = price - tp * point
+                request['tp'] = price - tp * point * 10
             result = mt5.order_send(request)
             print("[sell] {} {} lots at {} with deviation={} points".format(symbol, volume, price, deviation))
             if result.retcode != mt5.TRADE_RETCODE_DONE:
