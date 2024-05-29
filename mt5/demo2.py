@@ -16,9 +16,9 @@ if __name__ == '__main__':
     # print(mt5.positions_total())
     # USDCHFのポジションを取得する
 
-    positions = mt5.positions_get(symbol="EURUSD", magic=mt5.magic)
+    positions = mt5.positions_get(symbol="EURUSD")
     for ps in positions:
-        print(ps.ticket)
+        print(ps)
 
     positions = mt5.positions_get(magic=mt5.magic)
     for ps in positions:

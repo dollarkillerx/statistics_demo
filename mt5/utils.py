@@ -21,9 +21,11 @@ class MT5utils:
                     df = pd.DataFrame(list(account_info_dict.items()), columns=['property', 'value'])
                     print("account_info() as dataframe:")
                     print(df)
-        print(mt5.terminal_info())
+        # print(mt5.terminal_info())
         # get data on MetaTrader 5 version
-        print(mt5.version())
+        # print(mt5.version())
+        print("MetaTrader5 package author: ", mt5.__author__)
+        print("MetaTrader5 package version: ", mt5.__version__)
 
     def shutdown(self):
         mt5.shutdown()
@@ -172,3 +174,39 @@ class MT5utils:
 
         return filtered_positions
 
+    # 获取利润
+    def profit(self, magic=0):
+        if magic == 0:
+            account_info = mt5.account_info()
+            if account_info == None:
+                raise ValueError("account_info error: {}".format(mt5.last_error()))
+            return account_info.profit
+        profit = 0
+        positions = self.positions_get(magic=self.magic)
+        for position in positions:
+            profit += position.profit
+        return profit
+
+    # 关闭订单
+    def close(self,orderId):
+        mt5.positions_get(ticket=orderId)
+
+
+        # position_id=result.order
+        # price=mt5.symbol_info_tick(symbol).bid
+        # deviation=20
+        # request={
+        #     "action": mt5.TRADE_ACTION_DEAL,
+        #     "symbol": symbol,
+        #     "volume": lot,
+        #     "type": mt5.ORDER_TYPE_SELL,
+        #     "position": position_id,
+        #     "price": price,
+        #     "deviation": deviation,
+        #     "magic": 234000,
+        #     "comment": "python script close",
+        #     "type_time": mt5.ORDER_TIME_GTC,
+        #     "type_filling": mt5.ORDER_FILLING_RETURN,
+        # }
+        # # 取引リクエストを送信する
+        # result=mt5.order_send(request)
