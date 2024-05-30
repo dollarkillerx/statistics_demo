@@ -248,3 +248,18 @@ class MT5utils:
                         print(
                             "       traderequest: {}={}".format(tradereq_filed, traderequest_dict[tradereq_filed]))
             raise ValueError("order_send failed, retcode={}".format(result.retcode))
+
+    # 关闭所有订单
+    def close_all(self, magic=0):
+        if magic == 0: # 关闭所有订单
+            positions = self.positions_get()
+            if positions is not None:
+                for pos in positions:
+                    self.close(pos.ticket)
+            return
+        else:
+            positions = self.positions_get(magic=magic)
+            if positions is not None:
+                for pos in positions:
+                    self.close(pos.ticket)
+            return

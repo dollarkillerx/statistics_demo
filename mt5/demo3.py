@@ -17,5 +17,7 @@ if __name__ == '__main__':
     # for position in positions:
     #     mt5.close(orderId=position.ticket)
     # print(a5.symbol_info("EURUSDz").point * 100)
-    mt5.buy(symbol="EURUSD", volume=0.01, comment="v1", sl=20,tp=20)
-    mt5.sell(symbol="EURUSD", volume=0.01, comment="v2",sl=20,tp=20)
+    # mt5.buy(symbol="EURUSD", volume=0.01, comment="v1", sl=20,tp=20)
+    # mt5.sell(symbol="EURUSD", volume=0.01, comment="v2",sl=20,tp=20)
+    # mt5.close_all(magic=mt5.magic)
+    mt5.close_all()
