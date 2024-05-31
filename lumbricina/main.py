@@ -15,7 +15,6 @@ Interval = 5  # 加仓间隔
 TimeInterval = 30  # 时间间隔 default 30分
 #########################################################
 
-
 if __name__ == '__main__':
     ehw = earthworm.Earthworm(Direction, Magic, Deviation, CurrencySuffix, InitialVolume, IncreaseMultiple,
                               BaseCurrency, Interval, TimeInterval)
