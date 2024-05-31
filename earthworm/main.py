@@ -5,7 +5,7 @@ import earthworm
 #########################################################
 # 初始化参数
 Direction = "buy"  # buy sell 初始方向
-Magic = 66666  # 魔术手
+Magic = 66661  # 魔术手
 Deviation = 30  # 滑点
 CurrencySuffix = "z"  # 货币后缀
 InitialVolume = 0.01  # 初始volume

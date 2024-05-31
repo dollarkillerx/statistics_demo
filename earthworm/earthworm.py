@@ -85,11 +85,11 @@ class Earthworm:
                     else:  # 亏损加仓
                         if self.direction == "sell":
                             self.mt5.buy(self.base_currency,
-                                         round(last_position.volume + round(last_position.volume * self.interval, 4),
-                                               4))
+                                         round(last_position.volume + round(last_position.volume * self.increase_multiple, 2),
+                                               2))
                         else:
                             self.mt5.sell(self.base_currency,
-                                          round(last_position.volume + round(last_position.volume * self.interval, 4),
-                                                4))
+                                          round(last_position.volume + round(last_position.volume * self.increase_multiple, 2),
+                                                2))
             self.closing_position()
             time.sleep(100 / 1000)

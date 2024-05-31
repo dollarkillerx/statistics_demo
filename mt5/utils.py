@@ -251,7 +251,7 @@ class MT5utils:
 
     # 关闭所有订单
     def close_all(self, magic=0):
-        if magic == 0: # 关闭所有订单
+        if magic == 0:  # 关闭所有订单
             positions = self.positions_get()
             if positions is not None:
                 for pos in positions:
@@ -263,3 +263,32 @@ class MT5utils:
                 for pos in positions:
                     self.close(pos.ticket)
             return
+
+    def last_error(self):
+        return mt5.last_error()
+
+    # 获取最新的一个订单  buy, sell
+    def last_position(self, orderType=""):
+        positions = self.positions_get(magic=self.magic)
+        if positions is None:
+            raise ValueError("last_positions {}".format(mt5.last_error()))
+        if orderType == "buy":
+            rs = [pos for pos in positions if pos.type == 0]
+            if len(rs) > 0:
+                return rs[len(rs) - 1]
+            return None
+        elif orderType == "sell":
+            rs = [pos for pos in positions if pos.type == 1]
+            if len(rs) > 0:
+                return rs[len(rs) - 1]
+            return None
+        else:
+            if len(positions) > 0:
+                return positions[len(positions) - 1]
+            return None
+
+    def symbol_info_tick(self, symbol):
+        return mt5.symbol_info_tick(self._get_currency_name(symbol))
+
+    def symbol_info(self, symbol):
+        return mt5.symbol_info(self._get_currency_name(symbol))
