@@ -34,6 +34,8 @@ class Earthworm:
         self.mt5.set_currency_suffix(self.currency_suffix)
         self.mt5.set_magic(self.magic)
         self.mt5.set_def_deviation(self.deviation)
+        # self.mt5.close_all()
+        # exit(0)
         # 是否是再开  （再开恢复）
         positions = self.mt5.positions_get(magic=self.mt5.magic)
         if positions is None:
@@ -85,11 +87,11 @@ class Earthworm:
                     else:  # 亏损加仓
                         if self.direction == "sell":
                             self.mt5.buy(self.base_currency,
-                                         round(last_position.volume + round(last_position.volume * self.increase_multiple, 2),
+                                         round(last_position.volume + self.increase_multiple,
                                                2))
                         else:
                             self.mt5.sell(self.base_currency,
-                                          round(last_position.volume + round(last_position.volume * self.increase_multiple, 2),
+                                          round(last_position.volume + self.increase_multiple,
                                                 2))
             self.closing_position()
             time.sleep(100 / 1000)
