@@ -7,7 +7,7 @@ getcontext().prec = 28
 
 class Earthworm:
     direction = "buy"  # buy sell 初始方向
-    magic = 66666  # 魔术手
+    magic = 66661  # 魔术手
     deviation = 30  # 滑点
     currency_suffix = "z"  # 货币后缀
     initial_volume = 0.01  # 初始volume
