@@ -34,8 +34,8 @@ class Earthworm:
         self.mt5.set_currency_suffix(self.currency_suffix)
         self.mt5.set_magic(self.magic)
         self.mt5.set_def_deviation(self.deviation)
-        # self.mt5.close_all()
-        # exit(0)
+        self.mt5.close_all()
+        exit(0)
         # 是否是再开  （再开恢复）
         positions = self.mt5.positions_get(magic=self.mt5.magic)
         if positions is None:
@@ -49,8 +49,29 @@ class Earthworm:
     # 是否平仓
     def closing_position(self):
         profit = self.mt5.profit(self.magic)
-        if profit > 200:
-            self.mt5.close_all(magic=self.magic)
+        if profit > 0:
+            if profit >= 100:
+                self.mt5.close_all(magic=self.magic)
+                return
+            if self.mt5.positions_total(magic=self.magic) > 10 and profit >= 30:
+                self.mt5.close_all(magic=self.magic)
+
+    def _direction(self):
+        positions = self.mt5.positions_get(magic=self.magic)
+        if positions is None:
+            return "buy"
+        buyNum = 0
+        sellNum = 0
+        # if len(positions) == 1:
+        #     return self.direction
+        for position in positions:
+            if position.type == 0:
+                buyNum += 1
+            else:
+                sellNum += 1
+        if buyNum > sellNum:
+            return "buy"
+        return "sell"
 
     def run(self):
         while True:
@@ -80,12 +101,12 @@ class Earthworm:
                 if abs(last_position.time_update - symbol_info_tick.time) > self.time_interval * 60:
                     # 盈利加仓
                     if self.mt5.profit(magic=self.mt5.magic) > 5:
-                        if self.direction == "buy":
+                        if self._direction() == "buy":
                             self.mt5.buy(self.base_currency, last_position.volume)
                         else:
                             self.mt5.sell(self.base_currency, last_position.volume)
                     else:  # 亏损加仓
-                        if self.direction == "sell":
+                        if self._direction() == "buy":
                             self.mt5.buy(self.base_currency,
                                          round(last_position.volume + self.increase_multiple,
                                                2))
