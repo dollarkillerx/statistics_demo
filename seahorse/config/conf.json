@@ -1,0 +1,11 @@
+{
+  "csv_path": "Exness_EURUSD_2023.csv",
+  "symbol": "EURUSD",
+  "db": {
+    "host": "127.0.0.1",
+    "port": 5432,
+    "user": "root",
+    "password": "root",
+    "db_name": "forex"
+  }
+}
