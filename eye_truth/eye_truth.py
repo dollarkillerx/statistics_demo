@@ -5,7 +5,7 @@ from decimal import Decimal, getcontext
 getcontext().prec = 28
 
 
-class Earthworm:
+class EyeTruth:
     direction = "buy"  # buy sell 初始方向
     magic = 66662  # 魔术手
     deviation = 30  # 滑点
