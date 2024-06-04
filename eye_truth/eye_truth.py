@@ -75,15 +75,13 @@ class EyeTruth:
         positions = self.mt5.positions_get(magic=self.magic)
         if positions is None:
             return "buy"
-        buyNum = 0
-        sellNum = 0
-        # if len(positions) == 1:
-        #     return self.direction
+        buyNum = 0  # buy 单 利润
+        sellNum = 0  # sell 单利润
         for position in positions:
             if position.type == 0:
-                buyNum += 1
+                buyNum += position.profit
             else:
-                sellNum += 1
+                sellNum += position.profit
         if buyNum > sellNum:
             return "buy"
         return "sell"
@@ -95,8 +93,6 @@ class EyeTruth:
             if last_position is None:
                 print("当前没有一个订单")
                 break
-
-            # print(last_position)
 
             # 获取最新的价格
             symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
