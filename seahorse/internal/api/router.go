@@ -161,9 +161,17 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 	}
 
 	var orders []models.Order
-	err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", req.Account).Order("create_time").Find(&orders).Error
-	if err != nil {
-		panic(err)
+
+	if req.Ticket == 0 {
+		err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", req.Account).Order("create_time").Find(&orders).Error
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", req.Account).Where("id = ?", req.Ticket).Order("create_time").Find(&orders).Error
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	tick2 := a.storage.GetTick2()
@@ -188,6 +196,7 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 			PriceOpen:    order.Price,
 			PriceCurrent: price,
 			Profit:       profile,
+			Symbol:       order.Symbol,
 		})
 	}
 

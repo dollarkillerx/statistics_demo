@@ -22,7 +22,7 @@ func TestApiInit(t *testing.T) {
 }
 
 func TestSymbolInfoTick(t *testing.T) {
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 5000; i++ {
 		_, bytes, err := urllib.Post("http://127.0.0.1:8475/api/v1/symbol_info_tick").
 			SetJsonObject(map[string]interface{}{
 				"symbol": "EURUSD",
@@ -60,7 +60,6 @@ func TestOrderSendClose(t *testing.T) {
 			"type":    1,
 			"price":   1.06565,
 			"account": "my_test",
-			"":        "",
 		}).Byte()
 	if err != nil {
 		panic(err)

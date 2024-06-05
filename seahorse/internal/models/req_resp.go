@@ -34,6 +34,7 @@ type ReqOrderSend struct {
 
 type ReqOrderPositionsGet struct {
 	Symbol string `json:"symbol"`
+	Ticket int    `json:"ticket"`
 
 	Account string `json:"account"`
 }
