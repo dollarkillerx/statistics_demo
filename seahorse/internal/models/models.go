@@ -14,9 +14,11 @@ type Order struct {
 	gorm.Model
 	Symbol     string  `json:"symbol"` // 货币
 	Type       int     `json:"type"`   // 0 buy，1 sell
+	Price      float64 `json:"price"`
+	ClosePrice float64 `json:"close_price"`
 	Volume     float64 `json:"volume"`
-	CreateTime int     `json:"create_time"`
-	CloseTime  int     `json:"close_time"`
+	CreateTime int64   `json:"create_time"`
+	CloseTime  int64   `json:"close_time"`
 	Profit     float64 `json:"profit"` // 利润
 }
 

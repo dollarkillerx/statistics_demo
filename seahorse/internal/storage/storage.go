@@ -27,6 +27,15 @@ type Storage struct {
 }
 
 func (s *Storage) GetTick() models.Tick {
+	s.getTickChannel <- struct{}{}
+	tick := <-s.tickChannel
+	return tick
+	//s.mu.Lock()
+	//defer s.mu.Unlock()
+	//return s.tick
+}
+
+func (s *Storage) GetTick2() models.Tick {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.tick
@@ -102,7 +111,7 @@ func New(rc *conf.Conf) *Storage {
 
 	db.AutoMigrate(&models.Order{}, &models.Account{})
 
-	rs := &Storage{Bb: db}
+	rs := &Storage{Bb: db, getTickChannel: make(chan struct{}), tickChannel: make(chan models.Tick)}
 
 	go rs.heartbeat()
 	return rs
