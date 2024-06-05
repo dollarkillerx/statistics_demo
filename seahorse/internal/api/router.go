@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"math"
 
 	"github.com/gin-gonic/gin"
@@ -78,12 +79,22 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 	}
 
 	// 未来考虑加入滑点
+	account := a.storage.GetAccount(req.Account)
+	if account.Profit < 0 {
+		if math.Abs(account.Profit)+account.Margin > account.Balance {
+			c.JSON(200, gin.H{
+				"error": "Liquidation爆仓",
+			})
+			return
+		}
+	}
 
 	tick2 := a.storage.GetTick2()
 
 	// 进场
 	if req.Position == 0 {
 		err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
+			Account:    req.Account,
 			Symbol:     req.Symbol,
 			Type:       req.Type,
 			Volume:     req.Volume,
@@ -146,7 +157,7 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 	}
 
 	var orders []models.Order
-	err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Order("create_time").Find(&orders).Error
+	err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", req.Account).Order("create_time").Find(&orders).Error
 	if err != nil {
 		panic(err)
 	}
@@ -182,43 +193,53 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 }
 
 func (a *ApiServer) accountInfo(c *gin.Context) {
-	var orders []models.Order
-	err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Order("create_time").Find(&orders).Error
-	if err != nil {
-		panic(err)
+	var req models.ReqAccountInfo
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Fatalln(err)
 	}
 
-	tick2 := a.storage.GetTick2()
-
-	var items []models.RespOrderPosition
-	for _, order := range orders {
-		price := tick2.Ask
-		var profile float64
-		if order.Type == 1 { // 如果当前订单为sell
-			price = tick2.Ask // 这做空平仓
-			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
-		} else {
-			price = tick2.Bid // 做多
-			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
-		}
-
-		items = append(items, models.RespOrderPosition{
-			Ticket:       order.ID,
-			Time:         order.CreateTime,
-			Type:         order.Type,
-			Volume:       order.Volume,
-			PriceOpen:    order.Price,
-			PriceCurrent: price,
-			Profit:       profile,
-		})
-	}
-
-	var profit float64
-	for _, item := range items {
-		profit += item.Profit
-	}
-
+	account := a.storage.GetAccount(req.Account)
 	c.JSON(200, models.RespAccountInfo{
-		Profit: profit,
+		Profit: account.Profit,
 	})
+
+	//var orders []models.Order
+	//err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Order("create_time").Find(&orders).Error
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//tick2 := a.storage.GetTick2()
+	//
+	//var items []models.RespOrderPosition
+	//for _, order := range orders {
+	//	price := tick2.Ask
+	//	var profile float64
+	//	if order.Type == 1 { // 如果当前订单为sell
+	//		price = tick2.Ask // 这做空平仓
+	//		profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+	//	} else {
+	//		price = tick2.Bid // 做多
+	//		profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+	//	}
+	//
+	//	items = append(items, models.RespOrderPosition{
+	//		Ticket:       order.ID,
+	//		Time:         order.CreateTime,
+	//		Type:         order.Type,
+	//		Volume:       order.Volume,
+	//		PriceOpen:    order.Price,
+	//		PriceCurrent: price,
+	//		Profit:       profile,
+	//	})
+	//}
+	//
+	//var profit float64
+	//for _, item := range items {
+	//	profit += item.Profit
+	//}
+
+	//c.JSON(200, models.RespAccountInfo{
+	//	Profit: profit,
+	//})
 }

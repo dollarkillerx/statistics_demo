@@ -33,6 +33,8 @@ type ReqOrderSend struct {
 
 type ReqOrderPositionsGet struct {
 	Symbol string `json:"symbol"`
+
+	Account string `json:"account"`
 }
 
 type RespOrderPositionsGet struct {
@@ -47,6 +49,10 @@ type RespOrderPosition struct {
 	PriceOpen    float64 `json:"price_open"`
 	PriceCurrent float64 `json:"price_current"` // 当前价格
 	Profit       float64 `json:"profit"`
+}
+
+type ReqAccountInfo struct {
+	Account string `json:"account"`
 }
 
 type RespAccountInfo struct {

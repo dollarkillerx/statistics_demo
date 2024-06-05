@@ -131,6 +131,7 @@ func (s *Storage) GetAccount(account string) models.Account {
 	tick2 := s.GetTick2()
 
 	var myProfile float64
+	var margin float64
 	for idx, order := range orders {
 		price := tick2.Ask
 		var profile float64
@@ -146,9 +147,34 @@ func (s *Storage) GetAccount(account string) models.Account {
 		orders[idx].Profit = profile
 
 		myProfile += orders[idx].Profit
+		margin += orders[idx].Margin
 	}
 
 	accountInfo.Profit = myProfile
+	accountInfo.Margin = margin
+
+	// 最大持仓
+	if accountInfo.LargestPosition < len(orders) {
+		accountInfo.LargestPosition = len(orders)
+	}
+	// 最大亏损
+	if myProfile < 0 {
+		if myProfile < accountInfo.LargestLoss {
+			accountInfo.LargestLoss = myProfile
+		}
+	}
+	// 最大盈利
+	if myProfile > 0 {
+		if myProfile > accountInfo.LargestProfit {
+			accountInfo.LargestProfit = myProfile
+		}
+	}
+	// up
+	err = s.Bb.Model(&models.Account{}).Where("account = ?", account).Updates(map[string]interface{}{
+		"largest_position": accountInfo.LargestPosition,
+		"largest_loss":     accountInfo.LargestLoss,
+		"largest_profit":   accountInfo.LargestProfit,
+	}).Error
 
 	return accountInfo
 }
