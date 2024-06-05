@@ -49,6 +49,7 @@ type RespOrderPosition struct {
 	PriceOpen    float64 `json:"price_open"`
 	PriceCurrent float64 `json:"price_current"` // 当前价格
 	Profit       float64 `json:"profit"`
+	Symbol       string  `json:"symbol"` // 货币
 }
 
 type ReqAccountInfo struct {

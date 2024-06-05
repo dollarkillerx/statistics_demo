@@ -1,8 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"math"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"seahorse/internal/models"
@@ -22,10 +25,6 @@ func (a *ApiServer) RegisterRoutes() {
 	}
 
 	a.gin.GET("web", a.web)
-}
-
-func (a *ApiServer) web(c *gin.Context) {
-	c.HTML(200, "index.html", gin.H{})
 }
 
 func (a *ApiServer) apiInit(c *gin.Context) {
@@ -243,3 +242,147 @@ func (a *ApiServer) accountInfo(c *gin.Context) {
 	//	Profit: profit,
 	//})
 }
+
+func (a *ApiServer) web(c *gin.Context) {
+	account := c.Query("account")
+	var ac models.Account
+	err := a.storage.Bb.Model(&models.Account{}).Where("account = ?", account).First(&ac).Error
+	if err != nil {
+		c.JSON(200, gin.H{
+			"error": "账户不存在",
+		})
+	}
+
+	getAccount := a.storage.GetAccount(account)
+
+	c.Writer.Header().Set("Content-Type", "text/html")
+
+	hp := html
+	hp = strings.ReplaceAll(hp, "{user}", account)
+	hp = strings.ReplaceAll(hp, "{balance}", fmt.Sprintf("%.4f", getAccount.Balance))
+	hp = strings.ReplaceAll(hp, "{lever}", fmt.Sprintf("%d", getAccount.Lever))
+	hp = strings.ReplaceAll(hp, "{margin}", fmt.Sprintf("%.4f", getAccount.Margin))
+	hp = strings.ReplaceAll(hp, "{profit}", fmt.Sprintf("%.4f", getAccount.Profit))
+
+	var orders []models.Order
+	err = a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", account).Order("create_time").Find(&orders).Error
+	if err != nil {
+		panic(err)
+	}
+
+	tick2 := a.storage.GetTick2()
+
+	var items []models.RespOrderPosition
+	for _, order := range orders {
+		price := tick2.Ask
+		var profile float64
+		if order.Type == 1 { // 如果当前订单为sell
+			price = tick2.Ask // 这做空平仓
+			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+		} else {
+			price = tick2.Bid // 做多
+			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+		}
+
+		items = append(items, models.RespOrderPosition{
+			Ticket:       order.ID,
+			Time:         order.CreateTime,
+			Type:         order.Type,
+			Volume:       order.Volume,
+			PriceOpen:    order.Price,
+			PriceCurrent: price,
+			Profit:       profile,
+			Symbol:       order.Symbol,
+		})
+	}
+
+	tables := ""
+	for _, item := range items {
+		stime := time.Unix(item.Time, 0).Format("2006-01-02 15:04:05")
+		tp := "买"
+		if item.Type == 0 {
+			tp = "买"
+		} else {
+			tp = "卖"
+		}
+		tables += fmt.Sprintf(`
+   <tr>
+		<td>%d</td>
+		<td>%s</td>
+		<td>%s</td>
+		<td>%s</td>
+		<td>%.4f</td>
+		<td>%.4f</td>
+		<td>%.4f</td>
+	</tr>
+`, item.Ticket, stime, tp, item.Symbol, item.PriceOpen, item.PriceCurrent, item.Profit)
+	}
+
+	hp = strings.ReplaceAll(hp, "{table}", tables)
+
+	c.Writer.Write([]byte(hp))
+}
+
+var html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户订单展示</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+    <!-- 用户信息 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            用户信息
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2"><strong>账户名:</strong> {user} </div>
+                <div class="col-md-2"><strong>余额:</strong> {balance}</div>
+                <div class="col-md-2"><strong>保证金:</strong> {margin}</div>
+                <div class="col-md-2"><strong>利润:</strong> {profit}</div>
+                <div class="col-md-2"><strong>杠杆:</strong> {lever}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 当前订单 -->
+    <div class="card">
+        <div class="card-header">
+            当前订单
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">订单号</th>
+                    <th scope="col">时间</th>
+                    <th scope="col">买/卖</th>
+                    <th scope="col">货币对</th>
+                    <th scope="col">买价格</th>
+                    <th scope="col">当前价格</th>
+                    <th scope="col">利润</th>
+                </tr>
+                </thead>
+                <tbody>
+                {table}
+             
+                
+                <!-- 添加更多订单行 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+`
