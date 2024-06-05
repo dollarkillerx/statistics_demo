@@ -161,6 +161,7 @@ class MT5utils:
         # price_current 当前价格
         # swap 库存费
         # comment
+        # profit
         positions = ()
         if symbol != "":
             symbol = self._get_currency_name(symbol)

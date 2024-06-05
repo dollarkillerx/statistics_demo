@@ -62,7 +62,6 @@ func (a *ApiServer) symbolInfoTick(c *gin.Context) {
 		Bid:       tick.Bid,
 		Timestamp: tick.Timestamp,
 	})
-
 }
 
 func (a *ApiServer) orderSend(c *gin.Context) {
@@ -134,9 +133,85 @@ func (a *ApiServer) positionsTotal(c *gin.Context) {
 }
 
 func (a *ApiServer) positionsGet(c *gin.Context) {
+	var req models.ReqOrderPositionsGet
+	if err := c.ShouldBindJSON(&req); err != nil {
+		panic(err)
+	}
 
+	var orders []models.Order
+	err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Order("create_time").Find(&orders).Error
+	if err != nil {
+		panic(err)
+	}
+
+	tick2 := a.storage.GetTick2()
+
+	var items []models.RespOrderPosition
+	for _, order := range orders {
+		price := tick2.Ask
+		var profile float64
+		if order.Type == 1 { // 如果当前订单为sell
+			price = tick2.Ask // 这做空平仓
+			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+		} else {
+			price = tick2.Bid // 做多
+			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+		}
+
+		items = append(items, models.RespOrderPosition{
+			Ticket:       order.ID,
+			Time:         order.CreateTime,
+			Type:         order.Type,
+			Volume:       order.Volume,
+			PriceOpen:    order.Price,
+			PriceCurrent: price,
+			Profit:       profile,
+		})
+	}
+
+	c.JSON(200, models.RespOrderPositionsGet{
+		Items: items,
+	})
 }
 
 func (a *ApiServer) accountInfo(c *gin.Context) {
+	var orders []models.Order
+	err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Order("create_time").Find(&orders).Error
+	if err != nil {
+		panic(err)
+	}
 
+	tick2 := a.storage.GetTick2()
+
+	var items []models.RespOrderPosition
+	for _, order := range orders {
+		price := tick2.Ask
+		var profile float64
+		if order.Type == 1 { // 如果当前订单为sell
+			price = tick2.Ask // 这做空平仓
+			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+		} else {
+			price = tick2.Bid // 做多
+			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+		}
+
+		items = append(items, models.RespOrderPosition{
+			Ticket:       order.ID,
+			Time:         order.CreateTime,
+			Type:         order.Type,
+			Volume:       order.Volume,
+			PriceOpen:    order.Price,
+			PriceCurrent: price,
+			Profit:       profile,
+		})
+	}
+
+	var profit float64
+	for _, item := range items {
+		profit += item.Profit
+	}
+
+	c.JSON(200, models.RespAccountInfo{
+		Profit: profit,
+	})
 }

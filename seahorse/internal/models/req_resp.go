@@ -28,3 +28,25 @@ type ReqOrderSend struct {
 	Position int     `json:"position"`
 	Price    float64 `json:"price"`
 }
+
+type ReqOrderPositionsGet struct {
+	Symbol string `json:"symbol"`
+}
+
+type RespOrderPositionsGet struct {
+	Items []RespOrderPosition `json:"items"`
+}
+
+type RespOrderPosition struct {
+	Ticket       uint    `json:"ticket"`
+	Time         int64   `json:"time"`
+	Type         int     `json:"type"`
+	Volume       float64 `json:"volume"`
+	PriceOpen    float64 `json:"price_open"`
+	PriceCurrent float64 `json:"price_current"` // 当前价格
+	Profit       float64 `json:"profit"`
+}
+
+type RespAccountInfo struct {
+	Profit float64 `json:"profit"`
+}
