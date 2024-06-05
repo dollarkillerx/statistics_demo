@@ -7,7 +7,7 @@ import eye_truth
 Direction = "sell"  # buy sell 初始方向
 Magic = 66600  # 魔术手
 Deviation = 30  # 滑点
-CurrencySuffix = "z"  # 货币后缀
+CurrencySuffix = "m"  # 货币后缀
 InitialVolume = 0.01  # 初始volume
 IncreaseMultiple = 0.01  # 加仓倍数
 BaseCurrency = "EURUSD"  # 基础

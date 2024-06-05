@@ -61,6 +61,8 @@ func (s *Storage) heartbeat() {
 	fmt.Println(record)
 	for {
 		<-s.getTickChannel
+
+	gxc:
 		record, err := reader.Read()
 		if err != nil {
 			s.tickChannel <- models.Tick{Over: true}
@@ -91,9 +93,15 @@ func (s *Storage) heartbeat() {
 		tick := models.Tick{
 			Symbol:    record[1],
 			Timestamp: tx.Unix(),
-			Ask:       math.Round(bidVal*100000) / 100000,
-			Bid:       math.Round(askVal*100000) / 100000,
+			Ask:       math.Round(askVal*100000) / 100000,
+			Bid:       math.Round(bidVal*100000) / 100000,
 		}
+
+		// 过滤高点差数据
+		if tick.Ask-tick.Bid > 0.0001 {
+			goto gxc
+		}
+
 		s.tickChannel <- tick
 
 		s.setTick(tick)
@@ -111,7 +119,7 @@ func New(rc *conf.Conf) *Storage {
 
 	db.AutoMigrate(&models.Order{}, &models.Account{})
 
-	rs := &Storage{Bb: db, getTickChannel: make(chan struct{}), tickChannel: make(chan models.Tick)}
+	rs := &Storage{Bb: db, getTickChannel: make(chan struct{}), tickChannel: make(chan models.Tick), Rc: rc}
 
 	go rs.heartbeat()
 	return rs

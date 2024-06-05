@@ -22,11 +22,12 @@ type RespSymbolInfoTick struct {
 }
 
 type ReqOrderSend struct {
-	Symbol   string  `json:"symbol"`
-	Volume   float64 `json:"volume"`
-	Type     int     `json:"type"`
-	Position int     `json:"position"`
-	Price    float64 `json:"price"`
+	Position int `json:"position"` // id
+
+	Symbol string  `json:"symbol"`
+	Volume float64 `json:"volume"`
+	Type   int     `json:"type"`
+	Price  float64 `json:"price"`
 
 	Account string `json:"account"`
 }

@@ -21,7 +21,6 @@ func (a *ApiServer) RegisterRoutes() {
 		v1.POST("/positions_total", a.positionsTotal)
 		v1.POST("/positions_get", a.positionsGet)
 		v1.POST("/account_info", a.accountInfo)
-		v1.POST("/account_info", a.accountInfo)
 	}
 
 	a.gin.GET("web", a.web)
@@ -101,6 +100,7 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 			Price:      req.Price,
 			CloseTime:  0,
 			Profit:     0,
+			Margin:     req.Price * req.Volume * 100000 / float64(account.Lever),
 		}).Error
 		if err != nil {
 			panic(err)
@@ -116,9 +116,9 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 		// 计算盈利
 		var profit float64
 		if req.Type == 0 {
-			profit = math.Round(((order.Price-req.Price)*req.Volume*100000)*100) / 100
+			profit = math.Round(((tick2.Bid-order.Price)*order.Volume*100000)*100) / 100
 		} else {
-			profit = math.Round(((req.Price-order.Price)*req.Volume*100000)*100) / 100
+			profit = math.Round(((order.Price-tick2.Ask)*order.Volume*100000)*100) / 100
 		}
 
 		err = a.storage.Bb.Model(&models.Order{}).Where("symbol = ? and id = ?", req.Symbol, req.Position).Updates(&models.Order{
@@ -129,6 +129,11 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 		if err != nil {
 			panic(err)
 		}
+
+		account.Balance += profit
+		a.storage.Bb.Model(&models.Account{}).Where("account = ?", req.Account).Updates(&models.Account{
+			Balance: account.Balance,
+		})
 	}
 
 	c.JSON(200, gin.H{
@@ -251,6 +256,7 @@ func (a *ApiServer) web(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"error": "账户不存在",
 		})
+		return
 	}
 
 	getAccount := a.storage.GetAccount(account)
@@ -309,13 +315,14 @@ func (a *ApiServer) web(c *gin.Context) {
    <tr>
 		<td>%d</td>
 		<td>%s</td>
+		<td>%.2f</td>
 		<td>%s</td>
 		<td>%s</td>
-		<td>%.4f</td>
-		<td>%.4f</td>
-		<td>%.4f</td>
+		<td>%.5f</td>
+		<td>%.5f</td>
+		<td>%.2f</td>
 	</tr>
-`, item.Ticket, stime, tp, item.Symbol, item.PriceOpen, item.PriceCurrent, item.Profit)
+`, item.Ticket, stime, item.Volume, tp, item.Symbol, item.PriceOpen, item.PriceCurrent, item.Profit)
 	}
 
 	hp = strings.ReplaceAll(hp, "{table}", tables)
@@ -362,6 +369,7 @@ var html = `
                 <tr>
                     <th scope="col">订单号</th>
                     <th scope="col">时间</th>
+                    <th scope="col">交易量</th>
                     <th scope="col">买/卖</th>
                     <th scope="col">货币对</th>
                     <th scope="col">买价格</th>

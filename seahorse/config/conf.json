@@ -1,4 +1,5 @@
 {
+  "address": "0.0.0.0:8475",
   "csv_path": "Exness_EURUSD_2023.csv",
   "symbol": "EURUSD",
   "db": {

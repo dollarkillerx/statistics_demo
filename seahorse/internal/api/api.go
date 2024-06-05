@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/gin-gonic/gin"
 	"seahorse/internal/conf"
 	"seahorse/internal/storage"
 )
