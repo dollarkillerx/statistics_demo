@@ -27,6 +27,8 @@ type ReqOrderSend struct {
 	Type     int     `json:"type"`
 	Position int     `json:"position"`
 	Price    float64 `json:"price"`
+
+	Account string `json:"account"`
 }
 
 type ReqOrderPositionsGet struct {

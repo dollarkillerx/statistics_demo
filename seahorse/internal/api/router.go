@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
 	"math"
+
+	"github.com/gin-gonic/gin"
 	"seahorse/internal/models"
 )
 
@@ -18,6 +19,12 @@ func (a *ApiServer) RegisterRoutes() {
 		v1.POST("/account_info", a.accountInfo)
 		v1.POST("/account_info", a.accountInfo)
 	}
+
+	a.gin.GET("web", a.web)
+}
+
+func (a *ApiServer) web(c *gin.Context) {
+	c.HTML(200, "index.html", gin.H{})
 }
 
 func (a *ApiServer) apiInit(c *gin.Context) {

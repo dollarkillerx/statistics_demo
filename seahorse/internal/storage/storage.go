@@ -116,3 +116,39 @@ func New(rc *conf.Conf) *Storage {
 	go rs.heartbeat()
 	return rs
 }
+
+func (s *Storage) GetAccount(account string) models.Account {
+	var accountInfo models.Account
+	err := s.Bb.Model(&models.Account{}).Where("account = ?", account).First(&accountInfo).Error
+	if err != nil {
+		panic(err)
+	}
+
+	var orders []models.Order
+	err = s.Bb.Model(&models.Order{}).Where("account = ?", account).
+		Where("close_time = 0").Find(&orders).Error
+
+	tick2 := s.GetTick2()
+
+	var myProfile float64
+	for idx, order := range orders {
+		price := tick2.Ask
+		var profile float64
+		if order.Type == 1 { // 如果当前订单为sell
+			price = tick2.Ask // 这做空平仓
+			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+		} else {
+			price = tick2.Bid // 做多
+			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+		}
+
+		orders[idx].Price = price
+		orders[idx].Profit = profile
+
+		myProfile += orders[idx].Profit
+	}
+
+	accountInfo.Profit = myProfile
+
+	return accountInfo
+}
