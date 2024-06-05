@@ -19,6 +19,7 @@ type RespSymbolInfoTick struct {
 	Ask       float64 `json:"ask"`
 	Bid       float64 `json:"bid"`
 	Timestamp int64   `json:"timestamp"`
+	Time      int64   `json:"time"`
 }
 
 type ReqOrderSend struct {

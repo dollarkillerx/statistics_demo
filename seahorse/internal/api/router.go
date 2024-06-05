@@ -67,6 +67,7 @@ func (a *ApiServer) symbolInfoTick(c *gin.Context) {
 		Ask:       tick.Ask,
 		Bid:       tick.Bid,
 		Timestamp: tick.Timestamp,
+		Time:      tick.Timestamp,
 	})
 }
 
@@ -176,7 +177,7 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 
 	tick2 := a.storage.GetTick2()
 
-	var items []models.RespOrderPosition
+	var items = make([]models.RespOrderPosition, 0)
 	for _, order := range orders {
 		price := tick2.Ask
 		var profile float64

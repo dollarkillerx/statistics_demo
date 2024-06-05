@@ -24,8 +24,8 @@ func NewApiServer(conf *conf.Conf, storage *storage.Storage) *ApiServer {
 func (a *ApiServer) Start() {
 	engine := gin.New()
 	engine.Use(gin.Recovery())
-
-	engine.Use(gin.Logger())
+	gin.SetMode(gin.ReleaseMode)
+	//engine.Use(gin.Logger())
 
 	a.gin = engine
 	a.RegisterRoutes()
