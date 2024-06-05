@@ -1,6 +1,7 @@
 package main
 
 import (
+	"seahorse/internal/api"
 	"seahorse/internal/conf"
 	"seahorse/internal/storage"
 )
@@ -9,7 +10,8 @@ import (
 
 func main() {
 	conf := conf.LoadConf()
-	storage := storage.New(conf.DB)
+	storage := storage.New(conf)
 
-	storage = storage
+	server := api.NewApiServer(conf, storage)
+	server.Start()
 }

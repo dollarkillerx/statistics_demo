@@ -23,8 +23,8 @@ type DB struct {
 
 type Account struct {
 	Account string  `json:"account"`
-	Funds   float64 `json:"funds"` // 资金
-	Lever   int     `json:"lever"` // 杠杆
+	Balance float64 `json:"balance"` // 资金
+	Lever   int     `json:"lever"`   // 杠杆
 }
 
 func LoadConf() *Conf {

@@ -16,7 +16,7 @@ import (
 
 func main() {
 	conf := conf.LoadConf()
-	storage := storage.New(conf.DB)
+	storage := storage.New(conf)
 
 	open, err := os.Open(conf.CsvPath)
 	if err != nil {
