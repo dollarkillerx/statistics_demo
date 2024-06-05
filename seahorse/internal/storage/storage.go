@@ -59,6 +59,11 @@ func (s *Storage) heartbeat() {
 		panic(err)
 	}
 	fmt.Println(record)
+
+	go func() {
+		s.getTickChannel <- struct{}{}
+		<-s.tickChannel
+	}()
 	for {
 		<-s.getTickChannel
 
@@ -102,9 +107,12 @@ func (s *Storage) heartbeat() {
 			goto gxc
 		}
 
-		s.tickChannel <- tick
+		if math.Abs(tick.Ask-s.tick.Ask) < 0.0004 {
+			goto gxc
+		}
 
 		s.setTick(tick)
+		s.tickChannel <- tick
 	}
 }
 
@@ -154,7 +162,7 @@ func (s *Storage) GetAccount(account string) models.Account {
 		orders[idx].Price = price
 		orders[idx].Profit = profile
 
-		myProfile += orders[idx].Profit
+		myProfile += profile
 		margin += orders[idx].Margin
 	}
 

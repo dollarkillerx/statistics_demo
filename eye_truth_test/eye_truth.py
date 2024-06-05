@@ -41,6 +41,9 @@ class EyeTruth:
         if positions is None:
             raise ValueError("error: {}".format(self.mt5.last_error()))
         if len(positions) == 0:  # 第一次开
+            symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
+            if symbol_info_tick is None:
+                raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
             if self.direction == "buy":
                 self.mt5.buy(self.base_currency, self.initial_volume, "Genesis")
             else:
@@ -92,8 +95,13 @@ class EyeTruth:
             # 1. 查询最近的一个订单
             last_position = self.mt5.last_position()
             if last_position is None:
-                print("当前没有一个订单")
-                break
+                symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
+                if symbol_info_tick is None:
+                    raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
+                self.mt5.buy(self.base_currency,  self.initial_volume)
+                self.highest = 0
+                print("--------------new-----------------")
+                continue
 
             # 获取最新的价格
             symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)

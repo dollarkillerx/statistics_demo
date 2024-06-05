@@ -25,7 +25,7 @@ func (a *ApiServer) Start() {
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	gin.SetMode(gin.ReleaseMode)
-	//engine.Use(gin.Logger())
+	engine.Use(gin.Logger())
 
 	a.gin = engine
 	a.RegisterRoutes()

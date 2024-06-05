@@ -45,8 +45,45 @@ class Seahorse:
     def set_currency_suffix(self, currency_suffix):
         self.currency_suffix = currency_suffix
 
+    # 获取利润
+    def profit(self, magic=0):
+        if magic == 0:
+            account_info = self.account_info()
+            if account_info == None:
+                raise ValueError("account_info error: {}".format(self.last_error()))
+            return account_info.profit
+        profit = 0
+        positions = self.positions_get(magic=self.magic)
+        for position in positions:
+            profit += position.profit
+        return profit
+
     def symbol_info_tick(self, symbol):
         url = "http://{}/api/v1/symbol_info_tick".format(self.address)
+        data = {
+            "symbol": symbol,
+        }
+
+        # 将数据编码为 JSON
+        json_data = json.dumps(data).encode('utf-8')
+
+        # 创建请求对象
+        req = urllib.request.Request(url, data=json_data, headers={'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req) as response:
+                bytes = response.read()
+                # 将字节数据解码为字符串
+                response_data = bytes.decode('utf-8')
+                # 将响应字符串转换为 JSON
+                response_json = json.loads(response_data)
+                return SimpleNamespace(**response_json)
+        except urllib.error.URLError as e:
+            return {
+                "error": e
+            }
+
+    def symbol_info_tick2(self, symbol):
+        url = "http://{}/api/v1/symbol_info_tick2".format(self.address)
         data = {
             "symbol": symbol,
         }
@@ -75,8 +112,8 @@ class Seahorse:
             # if deviation == 0:
             #     deviation = self.deviation
             point = 0.00001
-            print(self.symbol_info_tick(symbol))
-            price = self.symbol_info_tick(symbol).ask
+            print(self.symbol_info_tick2(symbol))
+            price = self.symbol_info_tick2(symbol).ask
             request = {
                 "symbol": symbol,
                 "volume": volume,
@@ -97,7 +134,7 @@ class Seahorse:
     def sell(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
         try:
             point = 0.00001
-            price = self.symbol_info_tick(symbol).bid
+            price = self.symbol_info_tick2(symbol).bid
             request = {
                 "symbol": symbol,
                 "volume": volume,
@@ -182,6 +219,7 @@ class Seahorse:
                 response_json = json.loads(response_data)
                 resp = []
                 for item in response_json['items']:
+                    item['time_update'] = item['time']
                     resp.append(SimpleNamespace(**item))
                 return resp
         except urllib.error.URLError as e:
@@ -259,7 +297,7 @@ class Seahorse:
             position = positions[0]
 
             point = 0.00001
-            symbol_info_tick = self.symbol_info_tick(position.symbol)
+            symbol_info_tick = self.symbol_info_tick2(position.symbol)
 
             bid_price = symbol_info_tick.bid
             ask_price = symbol_info_tick.ask

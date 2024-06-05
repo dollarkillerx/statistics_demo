@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ func (a *ApiServer) RegisterRoutes() {
 		v1.POST("/init", a.apiInit)
 		v1.POST("/symbol_info", a.symbolInfo)
 		v1.POST("/symbol_info_tick", a.symbolInfoTick)
+		v1.POST("/symbol_info_tick2", a.symbolInfoTick2)
 		v1.POST("/order_send", a.orderSend)
 		v1.POST("/positions_total", a.positionsTotal)
 		v1.POST("/positions_get", a.positionsGet)
@@ -71,6 +73,21 @@ func (a *ApiServer) symbolInfoTick(c *gin.Context) {
 	})
 }
 
+func (a *ApiServer) symbolInfoTick2(c *gin.Context) {
+	var req models.ReqSymbolInfoTick
+	if err := c.ShouldBindJSON(&req); err != nil {
+		panic(err)
+	}
+
+	tick := a.storage.GetTick2()
+	c.JSON(200, models.RespSymbolInfoTick{
+		Ask:       tick.Ask,
+		Bid:       tick.Bid,
+		Timestamp: tick.Timestamp,
+		Time:      tick.Timestamp,
+	})
+}
+
 func (a *ApiServer) orderSend(c *gin.Context) {
 	var req models.ReqOrderSend
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -116,14 +133,24 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 
 		// 计算盈利
 		var profit float64
-		if req.Type == 0 {
-			profit = math.Round(((tick2.Bid-order.Price)*order.Volume*100000)*100) / 100
+		var price float64
+		if order.Type == 1 { // 如果当前订单为sell
+			price = tick2.Ask // 这做空平仓
+			profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
 		} else {
-			profit = math.Round(((order.Price-tick2.Ask)*order.Volume*100000)*100) / 100
+			price = tick2.Bid // 做多
+			profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+		}
+
+		if req.Price != price {
+			log.Println("req: ", req.Price)
+			log.Println("pr: ", price)
+			log.Println("-=========================")
+			os.Exit(0)
 		}
 
 		err = a.storage.Bb.Model(&models.Order{}).Where("symbol = ? and id = ?", req.Symbol, req.Position).Updates(&models.Order{
-			ClosePrice: req.Price,
+			ClosePrice: price,
 			CloseTime:  tick2.Timestamp,
 			Profit:     profit,
 		}).Error
