@@ -39,3 +39,19 @@ type Account struct {
 	Profit float64 `json:"profit"` // 利润
 	Margin float64 `json:"margin"` // 保证金
 }
+
+type OrderHistory struct {
+	gorm.Model
+	CloseTime int64   `json:"close_time"`
+	Profit    float64 `json:"profit"`
+	Position  int     `json:"position"` // 仓位数量
+	Volume    float64 `json:"volume"`   // 交易量
+}
+
+type OrderHistoryTick struct {
+	gorm.Model
+	Time     int64   `json:"time"`
+	Profit   float64 `json:"profit"`
+	Position int     `json:"position"` // 仓位数量
+	Volume   float64 `json:"volume"`   // 交易量
+}
