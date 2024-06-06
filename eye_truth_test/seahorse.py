@@ -318,8 +318,29 @@ class Seahorse:
             print(f'close exception: {e}')
             exit(1)
 
+    def _close_all_sig(self):
+        url = "http://{}/api/v1/close_all_signal".format(self.address)
+        data = {
+            "account": self.account,
+        }
+
+        # 将数据编码为 JSON
+        json_data = json.dumps(data).encode('utf-8')
+
+        # 创建请求对象
+        req = urllib.request.Request(url, data=json_data, headers={'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req) as response:
+                bytes = response.read()
+                # 将字节数据解码为字符串
+                response_data = bytes.decode('utf-8')
+                print(response_data)
+        except urllib.error.URLError as e:
+            raise ValueError(e)
+
     # 关闭所有订单
     def close_all(self, magic=0):
+        self._close_all_sig()
         if magic == 0:  # 关闭所有订单
             positions = self.positions_get()
             if positions is not None:
