@@ -52,10 +52,10 @@ class EyeTruth:
     # 是否平仓
     def closing_position(self):
         profit = self.mt5.profit(self.magic)
-        if profit > 0:
-            if profit >= 100:
-                self.mt5.close_all(magic=self.magic)
-                return
+        # if profit > 0:
+        #     if profit >= 100:
+        #         self.mt5.close_all(magic=self.magic)
+        #         return
             # if self.mt5.positions_total(magic=self.magic) > 10 and profit >= 30:
             #     self.mt5.close_all(magic=self.magic)
         # 移动止损

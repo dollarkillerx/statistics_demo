@@ -29,6 +29,7 @@ type Order struct {
 type Account struct {
 	gorm.Model
 	Account         string  `json:"account"`
+	InitialAmount   float64 `json:"initial_amount"`   // 初始资金
 	Balance         float64 `json:"balance"`          // 资金
 	Lever           int     `json:"lever"`            // 杠杆
 	LargestPosition int     `json:"largest_position"` // 最大持仓

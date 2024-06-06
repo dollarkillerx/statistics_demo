@@ -22,6 +22,7 @@ func (a *ApiServer) RegisterRoutes() {
 		v1.POST("/order_send", a.orderSend)
 		v1.POST("/positions_total", a.positionsTotal)
 		v1.POST("/positions_get", a.positionsGet)
+		v1.POST("/close_all_signal", a.closeAllSignal)
 		v1.POST("/account_info", a.accountInfo)
 	}
 
@@ -36,6 +37,7 @@ func (a *ApiServer) apiInit(c *gin.Context) {
 
 	err := a.storage.Bb.Model(&models.Account{}).Create(&models.Account{
 		Account:         req.Account,
+		InitialAmount:   req.Balance,
 		Balance:         req.Balance,
 		Lever:           req.Lever,
 		LargestPosition: 0,
@@ -285,6 +287,10 @@ func (a *ApiServer) accountInfo(c *gin.Context) {
 	//})
 }
 
+func (a *ApiServer) closeAllSignal(c *gin.Context) {
+
+}
+
 func (a *ApiServer) web(c *gin.Context) {
 	account := c.Query("account")
 	var ac models.Account
@@ -302,10 +308,14 @@ func (a *ApiServer) web(c *gin.Context) {
 
 	hp := html
 	hp = strings.ReplaceAll(hp, "{user}", account)
-	hp = strings.ReplaceAll(hp, "{balance}", fmt.Sprintf("%.4f", getAccount.Balance))
+	hp = strings.ReplaceAll(hp, "{rj}", fmt.Sprintf("%.2f", getAccount.InitialAmount))
+	hp = strings.ReplaceAll(hp, "{balance}", fmt.Sprintf("%.2f", getAccount.Balance))
 	hp = strings.ReplaceAll(hp, "{lever}", fmt.Sprintf("%d", getAccount.Lever))
-	hp = strings.ReplaceAll(hp, "{margin}", fmt.Sprintf("%.4f", getAccount.Margin))
-	hp = strings.ReplaceAll(hp, "{profit}", fmt.Sprintf("%.4f", getAccount.Profit))
+	hp = strings.ReplaceAll(hp, "{margin}", fmt.Sprintf("%.2f", getAccount.Margin))
+	hp = strings.ReplaceAll(hp, "{profit}", fmt.Sprintf("%.2f", getAccount.Profit))
+	hp = strings.ReplaceAll(hp, "{cs}", fmt.Sprintf("%d", getAccount.LargestPosition))
+	hp = strings.ReplaceAll(hp, "{ks}", fmt.Sprintf("%.2f", getAccount.LargestLoss))
+	hp = strings.ReplaceAll(hp, "{yl}", fmt.Sprintf("%.2f", getAccount.LargestProfit))
 
 	var orders []models.Order
 	err = a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", account).Order("create_time").Find(&orders).Error
@@ -387,10 +397,14 @@ var html = `
         <div class="card-body">
             <div class="row">
                 <div class="col-md-2"><strong>账户名:</strong> {user} </div>
+                <div class="col-md-2"><strong>初始入金:</strong> {rj}</div>
                 <div class="col-md-2"><strong>余额:</strong> {balance}</div>
                 <div class="col-md-2"><strong>保证金:</strong> {margin}</div>
                 <div class="col-md-2"><strong>利润:</strong> {profit}</div>
                 <div class="col-md-2"><strong>杠杆:</strong> {lever}</div>
+                <div class="col-md-2"><strong>最大层数:</strong> {cs}</div>
+                <div class="col-md-2"><strong>最大亏损:</strong> {ks}</div>
+                <div class="col-md-2"><strong>最大盈利:</strong> {yl}</div>
             </div>
         </div>
     </div>
