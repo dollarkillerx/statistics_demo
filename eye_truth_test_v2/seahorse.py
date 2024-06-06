@@ -1,4 +1,5 @@
 import json
+import os
 import urllib.request
 from types import SimpleNamespace
 
@@ -51,6 +52,8 @@ class Seahorse:
             account_info = self.account_info()
             if account_info == None:
                 raise ValueError("account_info error: {}".format(self.last_error()))
+            if account_info.profit + account_info.balance < 200:
+                exit(0)
             return account_info.profit
         profit = 0
         positions = self.positions_get(magic=self.magic)
@@ -119,13 +122,16 @@ class Seahorse:
                 "volume": volume,
                 "type": 0,
                 "price": price,
+                "comment": comment,
+                "sl": sl,
+                "tp": tp,
                 "account": self.account,
             }
             if sl != 0:
-                request['sl'] = price - sl * point * 10
+                sl = price - sl * point * 10
             if tp != 0:
-                request['tp'] = price + tp * point * 10
-            self._orderSend(0, symbol, volume, price, 0)
+                tp = price + tp * point * 10
+            self._orderSend(0, symbol, volume, price, 0, comment=comment, sl=sl, tp=tp)
         except Exception as e:
             print(f'buy exception: {e}')
             exit(1)
@@ -142,12 +148,14 @@ class Seahorse:
                 "price": price,
                 "deviation": deviation,
                 "comment": comment,
+                "sl": sl,
+                "tp": tp,
             }
             if sl != 0:
-                request['sl'] = price + sl * point * 10
+                sl = price + sl * point * 10
             if tp != 0:
-                request['tp'] = price - tp * point * 10
-            self._orderSend(0, symbol, volume, price, 1)
+                tp = price - tp * point * 10
+            self._orderSend(0, symbol, volume, price, 1, comment=comment, sl=sl, tp=tp)
         except Exception as e:
             print(f'sell exception: {e}')
             exit(1)
@@ -255,7 +263,7 @@ class Seahorse:
 
         return filtered_positions
 
-    def _orderSend(self, position: int, symbol: str, volume: float, price: float, typ: int):
+    def _orderSend(self, position: int, symbol: str, volume: float, price: float, typ: int, comment = "", sl = 0, tp = 0):
         url = "http://{}/api/v1/order_send".format(self.address)
         data = {
             "position": position,
@@ -264,6 +272,9 @@ class Seahorse:
             "type":    typ,
             "price":   price,
             "account": self.account,
+            "comment": comment,
+            "sl": sl,
+            "tp": tp,
         }
 
         # 将数据编码为 JSON
