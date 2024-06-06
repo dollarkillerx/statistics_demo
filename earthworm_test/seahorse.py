@@ -1,5 +1,4 @@
 import json
-import os
 import urllib.request
 from types import SimpleNamespace
 
@@ -52,8 +51,6 @@ class Seahorse:
             account_info = self.account_info()
             if account_info == None:
                 raise ValueError("account_info error: {}".format(self.last_error()))
-            if account_info.profit + account_info.balance < 200:
-                exit(0)
             return account_info.profit
         profit = 0
         positions = self.positions_get(magic=self.magic)

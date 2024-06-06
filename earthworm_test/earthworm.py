@@ -5,7 +5,7 @@ from decimal import Decimal, getcontext
 getcontext().prec = 28
 
 
-class EyeTruth:
+class Earthworm:
     direction = "buy"  # buy sell 初始方向
     magic = 0  # 魔术手
     deviation = 30  # 滑点
@@ -16,14 +16,12 @@ class EyeTruth:
     interval = 5  # 加仓间隔
     time_interval = 30  # 时间间隔 default 30分
 
-    next_time = 0 # 下次时间
-
     highest = 0  # 最高
 
     def __init__(self, direction, magic, deviation, currency_suffix, initial_volume, increase_multiple, base_currency,
                  interval,
                  time_interval):
-        self.mt5 = seahorse.Seahorse("127.0.0.1:8475", "my_test", 2000, 2000)
+        self.mt5 = seahorse.Seahorse("127.0.0.1:8475", "my_test", 1000, 2000)
         self.mt5.init_account()
         self.direction = direction
         self.magic = magic
@@ -43,9 +41,6 @@ class EyeTruth:
         if positions is None:
             raise ValueError("error: {}".format(self.mt5.last_error()))
         if len(positions) == 0:  # 第一次开
-            symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
-            if symbol_info_tick is None:
-                raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
             if self.direction == "buy":
                 self.mt5.buy(self.base_currency, self.initial_volume, "Genesis")
             else:
@@ -58,13 +53,13 @@ class EyeTruth:
         #     if profit >= 100:
         #         self.mt5.close_all(magic=self.magic)
         #         return
-        # if self.mt5.positions_total(magic=self.magic) > 10 and profit >= 30:
-        #     self.mt5.close_all(magic=self.magic)
+            # if self.mt5.positions_total(magic=self.magic) > 10 and profit >= 30:
+            #     self.mt5.close_all(magic=self.magic)
         # 移动止损
         if self.highest <= profit:
             self.highest = profit
         if self.highest >= 40:
-            if self.highest - profit >= 20:
+            if self.highest - profit >= 15:
                 self.mt5.close_all(magic=self.magic)
                 return
             return
@@ -76,15 +71,9 @@ class EyeTruth:
         if self.highest >= 25:
             if self.highest - profit >= 10:
                 self.mt5.close_all(magic=self.magic)
-        # if self.highest >= 10:
-        #     if self.highest - profit >= 8:
-        #         self.mt5.close_all(magic=self.magic)
-
-        if profit < 0 and abs(profit) > 1000:
-            self.mt5.close_all(magic=self.magic)
-            tick =  self.mt5.symbol_info_tick2("")
-            self.next_time = tick.time + 60 * 60 * 10
-            return
+        if self.highest >= 9:
+            if self.highest - profit >= 8:
+                self.mt5.close_all(magic=self.magic)
 
     def _direction(self):
         positions = self.mt5.positions_get(magic=self.magic)
@@ -103,24 +92,23 @@ class EyeTruth:
 
     def run(self):
         while True:
-            symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
-            if symbol_info_tick is None:
-                raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
-
-            if self.next_time != 0:
-                if symbol_info_tick.time >= self.next_time:
-                    self.next_time = 0
-                    self.highest = 0
-                    continue
             # 1. 查询最近的一个订单
             last_position = self.mt5.last_position()
             if last_position is None:
-                self.mt5.buy(self.base_currency, self.initial_volume)
+                symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
+                if symbol_info_tick is None:
+                    raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
+                self.mt5.buy(self.base_currency,  self.initial_volume)
                 self.highest = 0
                 print("--------------new-----------------")
                 continue
 
+            # print(last_position)
+
             # 获取最新的价格
+            symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
+            if symbol_info_tick is None:
+                raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
             price = 0
             if self.direction == "buy":
                 price = symbol_info_tick.ask

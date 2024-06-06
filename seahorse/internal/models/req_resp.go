@@ -25,10 +25,13 @@ type RespSymbolInfoTick struct {
 type ReqOrderSend struct {
 	Position int `json:"position"` // id
 
-	Symbol string  `json:"symbol"`
-	Volume float64 `json:"volume"`
-	Type   int     `json:"type"`
-	Price  float64 `json:"price"`
+	Symbol  string  `json:"symbol"`
+	Volume  float64 `json:"volume"`
+	Type    int     `json:"type"`
+	Price   float64 `json:"price"`
+	Tp      float64 `json:"tp"`      // 止盈
+	Sl      float64 `json:"sl"`      // 止损
+	Comment string  `json:"comment"` // 备注
 
 	Account string `json:"account"`
 }
@@ -53,6 +56,7 @@ type RespOrderPosition struct {
 	PriceCurrent float64 `json:"price_current"` // 当前价格
 	Profit       float64 `json:"profit"`
 	Symbol       string  `json:"symbol"` // 货币
+	Comment      string  `json:"comment"`
 }
 
 type ReqAccountInfo struct {

@@ -12,18 +12,25 @@ type Tick struct {
 
 type Order struct {
 	gorm.Model
-	Symbol     string  `json:"symbol"` // 货币
-	Type       int     `json:"type"`   // 0 buy，1 sell
-	Price      float64 `json:"price"`
-	ClosePrice float64 `json:"close_price"`
-	Volume     float64 `json:"volume"`
-	CreateTime int64   `json:"create_time"`
-	CloseTime  int64   `json:"close_time"`
-	Profit     float64 `json:"profit"` // 利润
+	Symbol        string  `json:"symbol"` // 货币
+	Type          int     `json:"type"`   // 0 buy，1 sell
+	Price         float64 `json:"price"`
+	ClosePrice    float64 `json:"close_price"`
+	Volume        float64 `json:"volume"`
+	CreateTime    int64   `json:"create_time"`
+	CreateTimeStr string  `json:"create_time_str"`
+	CloseTime     int64   `json:"close_time"`
+	CloseTimeStr  string  `json:"close_time_str"`
+	Profit        float64 `json:"profit"` // 利润
+	Tp            float64 `json:"tp"`     // 止盈
+	Sl            float64 `json:"sl"`     // 止损
 
 	Margin float64 `json:"margin"` // 保证金
 
 	Account string `json:"account"`
+
+	Comment string `json:"comment"` // 备注
+	Auto    bool   `json:"auto"`
 }
 
 type Account struct {
@@ -42,16 +49,20 @@ type Account struct {
 
 type OrderHistory struct {
 	gorm.Model
-	CloseTime int64   `json:"close_time"`
-	Profit    float64 `json:"profit"`
-	Position  int     `json:"position"` // 仓位数量
-	Volume    float64 `json:"volume"`   // 交易量
+	CloseTime    int64   `json:"close_time"`
+	CloseTimeStr string  `json:"close_time_str"`
+	Profit       float64 `json:"profit"`
+	Position     int     `json:"position"` // 仓位数量
+	Volume       float64 `json:"volume"`   // 交易量
+	Comment      string  `json:"comment"`  // 备注
 }
 
 type OrderHistoryTick struct {
 	gorm.Model
 	Time     int64   `json:"time"`
+	TimeStr  string  `json:"time_str"`
 	Profit   float64 `json:"profit"`   // 最值
 	Position int     `json:"position"` // 仓位数量
 	Volume   float64 `json:"volume"`   // 交易量
+	Comment  string  `json:"comment"`  // 备注
 }

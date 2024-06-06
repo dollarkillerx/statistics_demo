@@ -70,8 +70,7 @@ func (s *Storage) heartbeat() {
 	gxc:
 		record, err := reader.Read()
 		if err != nil {
-			s.tickChannel <- models.Tick{Over: true}
-			s.setTick(models.Tick{Over: true})
+			s.tickChannel <- s.tick
 			return
 		}
 
@@ -202,6 +201,7 @@ var lossNum int          // 亏损时持仓数量
 var profitNum int        // 盈利时持仓数量
 var lossAmount float64   // 亏损时手数
 var profitAmount float64 // 盈利时手数
+var comment string
 
 func (s *Storage) Record(orders []models.RespOrderPosition) {
 	var prf float64
@@ -220,6 +220,9 @@ func (s *Storage) Record(orders []models.RespOrderPosition) {
 			recordLoss = prf
 			lossNum = len(orders)
 			lossAmount = vol
+			if len(orders) > 0 {
+				comment = orders[0].Comment
+			}
 		}
 	}
 
@@ -229,26 +232,33 @@ func (s *Storage) Record(orders []models.RespOrderPosition) {
 			recordProfit = prf
 			profitNum = len(orders)
 			profitAmount = vol
+			if len(orders) > 0 {
+				comment = orders[0].Comment
+			}
 		}
 	}
 }
 
-func (s *Storage) RecordUp(time int64) {
+func (s *Storage) RecordUp(timer int64) {
 	// update
 	s.Bb.Model(&models.OrderHistoryTick{}).
 		Create(&models.OrderHistoryTick{
-			Time:     time,
+			Time:     timer,
+			TimeStr:  time.Unix(timer, 0).Format("2006-01-02 15:04:05"),
 			Profit:   recordLoss,
 			Position: lossNum,
 			Volume:   lossAmount,
+			Comment:  comment,
 		})
 
 	s.Bb.Model(&models.OrderHistoryTick{}).
 		Create(&models.OrderHistoryTick{
-			Time:     time,
+			Time:     timer,
+			TimeStr:  time.Unix(timer, 0).Format("2006-01-02 15:04:05"),
 			Profit:   recordProfit,
 			Position: profitNum,
 			Volume:   profitAmount,
+			Comment:  comment,
 		})
 
 	recordMu.Lock()
@@ -259,4 +269,5 @@ func (s *Storage) RecordUp(time int64) {
 	recordProfit = 0
 	profitNum = 0
 	profitAmount = 0
+	comment = ""
 }
