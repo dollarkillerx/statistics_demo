@@ -125,7 +125,7 @@ func New(rc *conf.Conf) *Storage {
 		panic(err)
 	}
 
-	db.AutoMigrate(&models.Order{}, &models.Account{})
+	db.AutoMigrate(&models.Order{}, &models.Account{}, &models.OrderHistory{}, &models.OrderHistoryTick{})
 
 	rs := &Storage{Bb: db, getTickChannel: make(chan struct{}), tickChannel: make(chan models.Tick), Rc: rc}
 
@@ -193,4 +193,70 @@ func (s *Storage) GetAccount(account string) models.Account {
 	}).Error
 
 	return accountInfo
+}
+
+var recordMu sync.Mutex
+var recordLoss float64   // 最大浮亏
+var recordProfit float64 // 最大浮盈
+var lossNum int          // 亏损时持仓数量
+var profitNum int        // 盈利时持仓数量
+var lossAmount float64   // 亏损时手数
+var profitAmount float64 // 盈利时手数
+
+func (s *Storage) Record(orders []models.RespOrderPosition) {
+	var prf float64
+	var vol float64
+	for _, v := range orders {
+		vol += v.Volume
+		prf += v.Profit
+	}
+
+	recordMu.Lock()
+	defer recordMu.Unlock()
+
+	if prf < 0 {
+		// 寻找最低
+		if recordLoss > prf {
+			recordLoss = prf
+			lossNum = len(orders)
+			lossAmount = vol
+		}
+	}
+
+	if prf > 0 {
+		// 寻找新高
+		if prf > recordProfit {
+			recordProfit = prf
+			profitNum = len(orders)
+			profitAmount = vol
+		}
+	}
+}
+
+func (s *Storage) RecordUp(time int64) {
+	// update
+	s.Bb.Model(&models.OrderHistoryTick{}).
+		Create(&models.OrderHistoryTick{
+			Time:     time,
+			Profit:   recordLoss,
+			Position: lossNum,
+			Volume:   lossAmount,
+		})
+
+	s.Bb.Model(&models.OrderHistoryTick{}).
+		Create(&models.OrderHistoryTick{
+			Time:     time,
+			Profit:   recordProfit,
+			Position: profitNum,
+			Volume:   profitAmount,
+		})
+
+	recordMu.Lock()
+	defer recordMu.Unlock()
+	recordLoss = 0
+	lossNum = 0
+	lossAmount = 0
+	recordProfit = 0
+	profitNum = 0
+	profitAmount = 0
 }

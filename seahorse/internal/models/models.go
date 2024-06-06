@@ -51,7 +51,7 @@ type OrderHistory struct {
 type OrderHistoryTick struct {
 	gorm.Model
 	Time     int64   `json:"time"`
-	Profit   float64 `json:"profit"`
+	Profit   float64 `json:"profit"`   // 最值
 	Position int     `json:"position"` // 仓位数量
 	Volume   float64 `json:"volume"`   // 交易量
 }

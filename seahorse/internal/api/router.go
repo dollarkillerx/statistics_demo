@@ -230,6 +230,8 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 		})
 	}
 
+	a.storage.Record(items)
+
 	c.JSON(200, models.RespOrderPositionsGet{
 		Items: items,
 	})
@@ -288,7 +290,51 @@ func (a *ApiServer) accountInfo(c *gin.Context) {
 }
 
 func (a *ApiServer) closeAllSignal(c *gin.Context) {
+	var req models.ReqOrderSend
+	if err := c.ShouldBindJSON(&req); err != nil {
+		panic(err)
+	}
 
+	// 获取所有订单计算利润
+	var orders []models.Order
+	err := a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).
+		Where("close_time = 0").Find(&orders).Error
+	if err != nil {
+		panic(err)
+	}
+
+	tick2 := a.storage.GetTick2()
+	var myProfile float64
+	var margin float64
+	var vol float64
+	for idx, order := range orders {
+		price := tick2.Ask
+		var profile float64
+		if order.Type == 1 { // 如果当前订单为sell
+			price = tick2.Ask // 这做空平仓
+			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+		} else {
+			price = tick2.Bid // 做多
+			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+		}
+
+		orders[idx].Price = price
+		orders[idx].Profit = profile
+
+		myProfile += profile
+		margin += orders[idx].Margin
+
+		vol += order.Volume
+	}
+
+	a.storage.Bb.Model(&models.OrderHistory{}).Create(&models.OrderHistory{
+		CloseTime: tick2.Timestamp,
+		Profit:    myProfile,
+		Position:  len(orders),
+		Volume:    vol,
+	})
+
+	a.storage.RecordUp(tick2.Timestamp)
 }
 
 func (a *ApiServer) web(c *gin.Context) {
