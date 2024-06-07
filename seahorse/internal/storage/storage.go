@@ -106,7 +106,7 @@ func (s *Storage) heartbeat() {
 			goto gxc
 		}
 
-		if math.Abs(tick.Ask-s.tick.Ask) < 0.0004 {
+		if math.Abs(tick.Ask-s.tick.Ask) < 0.0003 {
 			goto gxc
 		}
 
@@ -124,11 +124,22 @@ func New(rc *conf.Conf) *Storage {
 		panic(err)
 	}
 
-	db.AutoMigrate(&models.Order{}, &models.Account{}, &models.OrderHistory{}, &models.OrderHistoryTick{})
+	db.AutoMigrate(&models.Order{}, &models.Account{}, &models.OrderHistory{}, &models.OrderHistoryTick{}, &models.AccountLog{})
 
 	rs := &Storage{Bb: db, getTickChannel: make(chan struct{}), tickChannel: make(chan models.Tick), Rc: rc}
 
 	go rs.heartbeat()
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			var account models.Account
+			rs.Bb.Model(models.Account{}).First(&account)
+			rs.Bb.Model(&models.AccountLog{}).Create(&models.AccountLog{
+				Account:         account.Account,
+				FundingDynamics: account.FundingDynamics,
+			})
+		}
+	}()
 	return rs
 }
 
@@ -184,11 +195,22 @@ func (s *Storage) GetAccount(account string) models.Account {
 			accountInfo.LargestProfit = myProfile
 		}
 	}
+
+	fundingDynamics := accountInfo.Balance + accountInfo.Profit
+	if accountInfo.FundingDynamicsMax == 0 {
+		accountInfo.FundingDynamicsMax = fundingDynamics
+	}
+	if fundingDynamics < accountInfo.FundingDynamicsMax {
+		accountInfo.FundingDynamicsMax = fundingDynamics
+	}
+
 	// up
 	err = s.Bb.Model(&models.Account{}).Where("account = ?", account).Updates(map[string]interface{}{
-		"largest_position": accountInfo.LargestPosition,
-		"largest_loss":     accountInfo.LargestLoss,
-		"largest_profit":   accountInfo.LargestProfit,
+		"largest_position":     accountInfo.LargestPosition,
+		"largest_loss":         accountInfo.LargestLoss,
+		"largest_profit":       accountInfo.LargestProfit,
+		"funding_dynamics_max": accountInfo.FundingDynamicsMax,
+		"funding_dynamics":     fundingDynamics,
 	}).Error
 
 	return accountInfo

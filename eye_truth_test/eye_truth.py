@@ -16,8 +16,6 @@ class EyeTruth:
     interval = 5  # 加仓间隔
     time_interval = 30  # 时间间隔 default 30分
 
-    next_time = 0 # 下次时间
-
     highest = 0  # 最高
 
     def __init__(self, direction, magic, deviation, currency_suffix, initial_volume, increase_multiple, base_currency,
@@ -54,17 +52,11 @@ class EyeTruth:
     # 是否平仓
     def closing_position(self):
         profit = self.mt5.profit(self.magic)
-        # if profit > 0:
-        #     if profit >= 100:
-        #         self.mt5.close_all(magic=self.magic)
-        #         return
-        # if self.mt5.positions_total(magic=self.magic) > 10 and profit >= 30:
-        #     self.mt5.close_all(magic=self.magic)
         # 移动止损
         if self.highest <= profit:
             self.highest = profit
         if self.highest >= 40:
-            if self.highest - profit >= 20:
+            if self.highest - profit >= 15:
                 self.mt5.close_all(magic=self.magic)
                 return
             return
@@ -76,15 +68,7 @@ class EyeTruth:
         if self.highest >= 25:
             if self.highest - profit >= 10:
                 self.mt5.close_all(magic=self.magic)
-        # if self.highest >= 10:
-        #     if self.highest - profit >= 8:
-        #         self.mt5.close_all(magic=self.magic)
 
-        if profit < 0 and abs(profit) > 1000:
-            self.mt5.close_all(magic=self.magic)
-            tick =  self.mt5.symbol_info_tick2("")
-            self.next_time = tick.time + 60 * 60 * 10
-            return
 
     def _direction(self):
         positions = self.mt5.positions_get(magic=self.magic)
@@ -103,24 +87,21 @@ class EyeTruth:
 
     def run(self):
         while True:
-            symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
-            if symbol_info_tick is None:
-                raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
-
-            if self.next_time != 0:
-                if symbol_info_tick.time >= self.next_time:
-                    self.next_time = 0
-                    self.highest = 0
-                    continue
             # 1. 查询最近的一个订单
             last_position = self.mt5.last_position()
             if last_position is None:
-                self.mt5.buy(self.base_currency, self.initial_volume)
+                symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
+                if symbol_info_tick is None:
+                    raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
+                self.mt5.buy(self.base_currency,  self.initial_volume)
                 self.highest = 0
                 print("--------------new-----------------")
                 continue
 
             # 获取最新的价格
+            symbol_info_tick = self.mt5.symbol_info_tick(self.base_currency)
+            if symbol_info_tick is None:
+                raise ValueError("啥 这都报错: {}".format(self.mt5.last_error()))
             price = 0
             if self.direction == "buy":
                 price = symbol_info_tick.ask
@@ -133,6 +114,9 @@ class EyeTruth:
                     str((Decimal(str(last_position.price_open)) - Decimal(str(price))))) * 10000) > self.interval:
                 # 检查时间是否尚可
                 if abs(last_position.time_update - symbol_info_tick.time) > self.time_interval * 60:
+                    # 进场 buy and sell 判断趋势
+                    # 策略改进：判断趋势 是否为持续的
+                    # 多空都为亏损 不进厂
                     # 盈利加仓
                     if self.mt5.profit(magic=self.mt5.magic) > 5:
                         if self._direction() == "buy":
@@ -149,4 +133,4 @@ class EyeTruth:
                                           round(last_position.volume + self.increase_multiple,
                                                 2))
             self.closing_position()
-            time.sleep(10 / 1000)
+            # time.sleep(100 / 1000)

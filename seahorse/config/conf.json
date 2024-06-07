@@ -1,5 +1,5 @@
 {
-  "address": "0.0.0.0:8475",
+  "address": "127.0.0.1:8475",
   "csv_path": "Exness_EURUSD_2023.csv",
   "symbol": "EURUSD",
   "db": {
@@ -7,6 +7,6 @@
     "port": 5432,
     "user": "root",
     "password": "root",
-    "db_name": "eye_truth_test3"
+    "db_name": "eye_truth_test7"
   }
 }

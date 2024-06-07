@@ -427,6 +427,9 @@ func (a *ApiServer) web(c *gin.Context) {
 	hp = strings.ReplaceAll(hp, "{cs}", fmt.Sprintf("%d", getAccount.LargestPosition))
 	hp = strings.ReplaceAll(hp, "{ks}", fmt.Sprintf("%.2f", getAccount.LargestLoss))
 	hp = strings.ReplaceAll(hp, "{yl}", fmt.Sprintf("%.2f", getAccount.LargestProfit))
+	hp = strings.ReplaceAll(hp, "{tj}", fmt.Sprintf("%.2f", getAccount.Balance+getAccount.Profit-getAccount.Margin))
+	hp = strings.ReplaceAll(hp, "{tj2}", fmt.Sprintf("%.2f", getAccount.Balance+getAccount.Profit))
+	hp = strings.ReplaceAll(hp, "{dtmax}", fmt.Sprintf("%.2f", getAccount.FundingDynamicsMax))
 
 	var orders []models.Order
 	err = a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", account).Order("create_time").Find(&orders).Error
@@ -516,6 +519,9 @@ var html = `
                 <div class="col-md-2"><strong>最大层数:</strong> {cs}</div>
                 <div class="col-md-2"><strong>最大亏损:</strong> {ks}</div>
                 <div class="col-md-2"><strong>最大盈利:</strong> {yl}</div>
+                <div class="col-md-2"><strong>动态金额:</strong> {tj}</div>
+                <div class="col-md-2"><strong>动态金额2:</strong> {tj2}</div>
+                <div class="col-md-2"><strong>动态最低:</strong> {dtmax}</div>
             </div>
         </div>
     </div>
