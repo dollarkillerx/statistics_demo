@@ -119,12 +119,12 @@ func (a *ApiServer) closeOrder(order models.Order, tick2 models.Tick) {
 		profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
 	}
 
-	err := a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).Updates(&models.Order{
-		ClosePrice:   price,
-		CloseTime:    tick2.Timestamp,
-		CloseTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-		Profit:       profit,
-		Auto:         true,
+	err := a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).Updates(map[string]interface{}{
+		"close_price":    price,
+		"close_time":     tick2.Timestamp,
+		"close_time_str": time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+		"profit":         profit,
+		"auto":           true,
 	}).Error
 	if err != nil {
 		panic(err)
@@ -153,11 +153,11 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		panic(err)
 	}
-
 	// 未来考虑加入滑点
 	account := a.storage.GetAccount(req.Account)
 	if account.Profit < 0 {
-		if account.Profit+account.Balance-account.Margin <= account.Balance {
+		if account.Profit+account.Balance-account.Margin <= 30 {
+			log.Println("Liquidation爆仓")
 			c.JSON(500, gin.H{
 				"error": "Liquidation爆仓",
 			})
@@ -213,12 +213,12 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 			os.Exit(0)
 		}
 
-		err = a.storage.Bb.Model(&models.Order{}).Where("symbol = ? and id = ?", req.Symbol, req.Position).Updates(&models.Order{
-			ClosePrice:    price,
-			CloseTime:     tick2.Timestamp,
-			CreateTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-			Profit:        profit,
-			Comment:       req.Comment,
+		err = a.storage.Bb.Model(&models.Order{}).Where("symbol = ? and id = ?", req.Symbol, req.Position).Updates(map[string]interface{}{
+			"close_price":    price,
+			"close_time":     tick2.Timestamp,
+			"close_time_str": time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+			"profit":         profit,
+			"comment":        req.Comment,
 		}).Error
 		if err != nil {
 			panic(err)
@@ -332,7 +332,8 @@ func (a *ApiServer) closeAll(c *gin.Context) {
 	// 获取所有订单计算利润
 	var orders []models.Order
 	a.storage.Bb.Model(&models.Order{}).
-		Where("account = ?", req.Account).Where("close_time = 0").Find(&orders)
+		Where("account = ?", req.Account).
+		Where("close_time = 0").Find(&orders)
 
 	tick2 := a.storage.GetTick2()
 	var myProfile float64
@@ -350,12 +351,12 @@ func (a *ApiServer) closeAll(c *gin.Context) {
 		myProfile += profit
 		// close
 		a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).
-			Updates(&models.Order{
-				ClosePrice:   price,
-				CloseTime:    tick2.Timestamp,
-				CloseTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-				Profit:       profit,
-				Comment:      req.Comment,
+			Updates(map[string]interface{}{
+				"close_price":    price,
+				"close_time":     tick2.Timestamp,
+				"close_time_str": time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+				"profit":         profit,
+				"comment":        req.Comment,
 			})
 	}
 

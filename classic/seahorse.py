@@ -109,6 +109,9 @@ class Seahorse:
         # buy 市价
     def buy(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
         try:
+            if symbol == '':
+                print("what fuck")
+                exit(0)
             # if deviation == 0:
             #     deviation = self.deviation
             point = 0.00001
@@ -142,6 +145,7 @@ class Seahorse:
                 "price": price,
                 "deviation": deviation,
                 "comment": comment,
+                "account": self.account,
             }
             if sl != 0:
                 request['sl'] = price + sl * point * 10
@@ -321,10 +325,12 @@ class Seahorse:
             print(f'close exception: {e}')
             exit(1)
 
-    def _close_all_sig(self):
-        url = "http://{}/api/v1/close_all_signal".format(self.address)
+    # 关闭所有订单
+    def close_all(self, magic=0,comment = ''):
+        url = "http://{}/api/v1/close_all".format(self.address)
         data = {
             "account": self.account,
+            "comment":  comment,
         }
 
         # 将数据编码为 JSON
@@ -337,25 +343,11 @@ class Seahorse:
                 bytes = response.read()
                 # 将字节数据解码为字符串
                 response_data = bytes.decode('utf-8')
-                print(response_data)
+                # 将响应字符串转换为 JSON
+                response_json = json.loads(response_data)
+                return response_json
         except urllib.error.URLError as e:
             raise ValueError(e)
-
-    # 关闭所有订单
-    def close_all(self, magic=0):
-        self._close_all_sig()
-        if magic == 0:  # 关闭所有订单
-            positions = self.positions_get()
-            if positions is not None:
-                for pos in positions:
-                    self.close(pos.ticket)
-            return
-        else:
-            positions = self.positions_get()
-            if positions is not None:
-                for pos in positions:
-                    self.close(pos.ticket)
-            return
 
     def last_error(self):
         return ""
