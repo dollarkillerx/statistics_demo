@@ -66,3 +66,8 @@ type ReqAccountInfo struct {
 type RespAccountInfo struct {
 	Profit float64 `json:"profit"`
 }
+
+type CloseAllReq struct {
+	Account string `json:"account"`
+	Comment string `json:"comment"`
+}

@@ -23,7 +23,7 @@ func (a *ApiServer) RegisterRoutes() {
 		v1.POST("/order_send", a.orderSend)
 		v1.POST("/positions_total", a.positionsTotal)
 		v1.POST("/positions_get", a.positionsGet)
-		v1.POST("/close_all_signal", a.closeAllSignal)
+		v1.POST("/close_all", a.closeAll)
 		v1.POST("/account_info", a.accountInfo)
 	}
 
@@ -157,8 +157,8 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 	// 未来考虑加入滑点
 	account := a.storage.GetAccount(req.Account)
 	if account.Profit < 0 {
-		if math.Abs(account.Profit)+account.Margin > account.Balance {
-			c.JSON(200, gin.H{
+		if account.Profit+account.Balance-account.Margin <= account.Balance {
+			c.JSON(500, gin.H{
 				"error": "Liquidation爆仓",
 			})
 			return
@@ -224,10 +224,8 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 			panic(err)
 		}
 
-		account.Balance += profit
-		a.storage.Bb.Model(&models.Account{}).Where("account = ?", req.Account).Updates(&models.Account{
-			Balance: account.Balance,
-		})
+		a.storage.Bb.Model(&models.Account{}).Where("account = ?", req.Account).
+			UpdateColumn("balance", gorm.Expr("balance + ?", profit))
 	}
 
 	c.JSON(200, gin.H{
@@ -236,8 +234,14 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 }
 
 func (a *ApiServer) positionsTotal(c *gin.Context) {
+	var req models.CloseAllReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		panic(err)
+	}
+
 	var count int64
-	err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Count(&count).Error
+	err := a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).
+		Where("close_time = 0").Count(&count).Error
 	if err != nil {
 		panic(err)
 	}
@@ -257,12 +261,19 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 	var orders []models.Order
 
 	if req.Ticket == 0 {
-		err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", req.Account).Order("create_time").Find(&orders).Error
+		err := a.storage.Bb.Model(&models.Order{}).
+			Where("close_time = 0").
+			Where("account = ?", req.Account).
+			Order("create_time").Find(&orders).Error
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", req.Account).Where("id = ?", req.Ticket).Order("create_time").Find(&orders).Error
+		err := a.storage.Bb.Model(&models.Order{}).
+			Where("close_time = 0").
+			Where("account = ?", req.Account).
+			Where("id = ?", req.Ticket).
+			Order("create_time").Find(&orders).Error
 		if err != nil {
 			panic(err)
 		}
@@ -310,94 +321,46 @@ func (a *ApiServer) accountInfo(c *gin.Context) {
 
 	account := a.storage.GetAccount(req.Account)
 	c.JSON(200, account)
-
-	//var orders []models.Order
-	//err := a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Order("create_time").Find(&orders).Error
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//tick2 := a.storage.GetTick2()
-	//
-	//var items []models.RespOrderPosition
-	//for _, order := range orders {
-	//	price := tick2.Ask
-	//	var profile float64
-	//	if order.Type == 1 { // 如果当前订单为sell
-	//		price = tick2.Ask // 这做空平仓
-	//		profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
-	//	} else {
-	//		price = tick2.Bid // 做多
-	//		profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
-	//	}
-	//
-	//	items = append(items, models.RespOrderPosition{
-	//		Ticket:       order.ID,
-	//		Time:         order.CreateTime,
-	//		Type:         order.Type,
-	//		Volume:       order.Volume,
-	//		PriceOpen:    order.Price,
-	//		PriceCurrent: price,
-	//		Profit:       profile,
-	//	})
-	//}
-	//
-	//var profit float64
-	//for _, item := range items {
-	//	profit += item.Profit
-	//}
-
-	//c.JSON(200, models.RespAccountInfo{
-	//	Profit: profit,
-	//})
 }
 
-func (a *ApiServer) closeAllSignal(c *gin.Context) {
-	var req models.ReqOrderSend
+func (a *ApiServer) closeAll(c *gin.Context) {
+	var req models.CloseAllReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		panic(err)
 	}
 
 	// 获取所有订单计算利润
 	var orders []models.Order
-	err := a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).
-		Where("close_time = 0").Find(&orders).Error
-	if err != nil {
-		panic(err)
-	}
+	a.storage.Bb.Model(&models.Order{}).
+		Where("account = ?", req.Account).Where("close_time = 0").Find(&orders)
 
 	tick2 := a.storage.GetTick2()
 	var myProfile float64
-	var margin float64
-	var vol float64
-	for idx, order := range orders {
-		price := tick2.Ask
-		var profile float64
+	for _, order := range orders {
+		var profit float64
+		var price float64
 		if order.Type == 1 { // 如果当前订单为sell
 			price = tick2.Ask // 这做空平仓
-			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+			profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
 		} else {
 			price = tick2.Bid // 做多
-			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+			profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
 		}
 
-		orders[idx].Price = price
-		orders[idx].Profit = profile
-
-		myProfile += profile
-		margin += orders[idx].Margin
-
-		vol += order.Volume
+		myProfile += profit
+		// close
+		a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).
+			Updates(&models.Order{
+				ClosePrice:   price,
+				CloseTime:    tick2.Timestamp,
+				CloseTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+				Profit:       profit,
+				Comment:      req.Comment,
+			})
 	}
 
-	a.storage.Bb.Model(&models.OrderHistory{}).Create(&models.OrderHistory{
-		CloseTime:    tick2.Timestamp,
-		CloseTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-		Profit:       myProfile,
-		Position:     len(orders),
-		Volume:       vol,
-		Comment:      req.Comment,
-	})
+	a.storage.Bb.Model(&models.Account{}).Where("account = ?", req.Account).
+		UpdateColumn("balance", gorm.Expr("balance + ?", myProfile))
 
 	a.storage.RecordUp(tick2.Timestamp)
 }
