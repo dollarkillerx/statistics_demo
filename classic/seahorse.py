@@ -193,6 +193,9 @@ class Seahorse:
                 response_data = bytes.decode('utf-8')
                 # 将响应字符串转换为 JSON
                 response_json = json.loads(response_data)
+                if response_json['balance'] + response_json['profit'] - response_json['margin'] < -10:
+                    exit(0)
+                    # self.close_all()
                 return SimpleNamespace(**response_json)
         except urllib.error.URLError as e:
             raise ValueError(e)

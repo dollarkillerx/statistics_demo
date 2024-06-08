@@ -133,11 +133,13 @@ func New(rc *conf.Conf) *Storage {
 		for {
 			time.Sleep(time.Second)
 			var account models.Account
-			rs.Bb.Model(models.Account{}).First(&account)
-			rs.Bb.Model(&models.AccountLog{}).Create(&models.AccountLog{
-				Account:         account.Account,
-				FundingDynamics: account.FundingDynamics,
-			})
+			err := rs.Bb.Model(models.Account{}).First(&account).Error
+			if err == nil {
+				rs.Bb.Model(&models.AccountLog{}).Where("funding_dynamics = ?", account.FundingDynamics).FirstOrCreate(&models.AccountLog{
+					Account:         account.Account,
+					FundingDynamics: account.FundingDynamics,
+				})
+			}
 		}
 	}()
 	return rs
