@@ -106,7 +106,7 @@ func (s *Storage) heartbeat() {
 			goto gxc
 		}
 
-		if math.Abs(tick.Ask-s.tick.Ask) < 0.0003 {
+		if math.Abs(tick.Ask-s.tick.Ask) < 0.00005 {
 			goto gxc
 		}
 
@@ -133,7 +133,15 @@ func New(rc *conf.Conf) *Storage {
 		for {
 			time.Sleep(time.Second)
 			var account models.Account
-			err := rs.Bb.Model(models.Account{}).First(&account).Error
+			err := rs.Bb.Model(models.Account{}).Where("account = ?", "ReverseAccount").First(&account).Error
+			if err == nil {
+				rs.Bb.Model(&models.AccountLog{}).Where("funding_dynamics = ?", account.FundingDynamics).FirstOrCreate(&models.AccountLog{
+					Account:         account.Account,
+					FundingDynamics: account.FundingDynamics,
+				})
+			}
+
+			err = rs.Bb.Model(models.Account{}).Where("account = ?", "my_test").First(&account).Error
 			if err == nil {
 				rs.Bb.Model(&models.AccountLog{}).Where("funding_dynamics = ?", account.FundingDynamics).FirstOrCreate(&models.AccountLog{
 					Account:         account.Account,

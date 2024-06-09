@@ -58,6 +58,7 @@ type AccountLog struct {
 
 type OrderHistory struct {
 	gorm.Model
+	Account      string  `json:"account"`
 	CloseTime    int64   `json:"close_time"`
 	CloseTimeStr string  `json:"close_time_str"`
 	Profit       float64 `json:"profit"`
@@ -68,6 +69,7 @@ type OrderHistory struct {
 
 type OrderHistoryTick struct {
 	gorm.Model
+	Account  string  `json:"account"`
 	Time     int64   `json:"time"`
 	TimeStr  string  `json:"time_str"`
 	Profit   float64 `json:"profit"`   // 最值

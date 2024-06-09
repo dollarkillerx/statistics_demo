@@ -30,7 +30,7 @@ class Classic:
         self.time_interval = time_interval
 
     def init(self):
-        self.mt5 = seahorse.Seahorse("127.0.0.1:8475", "my_test", 10000, 2000)
+        self.mt5 = seahorse.Seahorse("127.0.0.1:8475", "my_test", 5000, 2000)
         self.mt5.init_account()
         self.mt5.set_currency_suffix(self.currency_suffix)
         self.mt5.set_magic(self.magic)
@@ -48,7 +48,7 @@ class Classic:
                 self.highest = 0
                 tick = self.mt5.symbol_info_tick2(symbol=self.symbol)
                 print(tick)
-                self.sleepTime = tick.time + 60*60*3
+                # self.sleepTime = tick.time + 60*60*3
                 return
             return
         if self.highest >= 30:
@@ -57,7 +57,7 @@ class Classic:
                 self.highest = 0
                 tick = self.mt5.symbol_info_tick2(symbol=self.symbol)
                 print(tick)
-                self.sleepTime = tick.time + 60*60*3
+                # self.sleepTime = tick.time + 60*60*3
                 return
             return
         if self.highest >= 25:
@@ -65,14 +65,14 @@ class Classic:
                 self.mt5.close_all(magic=self.magic)
                 tick = self.mt5.symbol_info_tick2(symbol=self.symbol)
                 print(tick)
-                self.sleepTime = tick.time + 60*60*3
+                # self.sleepTime = tick.time + 60*60*3
                 self.highest = 0
         if profit < 0:
-            if abs(profit) > 1000:
+            if abs(profit) > 300:
                 self.mt5.close_all(magic=self.magic)
                 tick = self.mt5.symbol_info_tick2(symbol=self.symbol)
                 print(tick)
-                self.sleepTime = tick.time + 60*60*3
+                # self.sleepTime = tick.time + 60*60*3
                 self.highest = 0
         # if profit >= 5:
         #     self.mt5.close_all(magic=self.magic)
@@ -94,6 +94,7 @@ class Classic:
             # 是否休息
             if self.sleepTime != 0:
                 if self.sleepTime < symbol_info_tick.time:
+                    print("continue")
                     continue
                 else:
                     self.sleepTime = 0
