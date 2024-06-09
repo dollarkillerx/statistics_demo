@@ -185,7 +185,7 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 	if req.Position == 0 {
 		var orders []models.Order
 		a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).Where("close_time = 0").Find(&orders)
-		if len(orders) >= 6 {
+		{
 			tp := req.Type
 			if tp == 0 {
 				tp = 1
@@ -208,15 +208,47 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 				Price:         price,
 				CloseTime:     0,
 				Profit:        0,
-				//Tp:            req.Tp,
-				//Sl:            req.Sl,
-				Comment: req.Comment,
-				Margin:  req.Price * req.Volume * 100000 / float64(account.Lever),
+				Tp:            req.Tp,
+				Sl:            req.Sl,
+				Comment:       req.Comment,
+				Margin:        req.Price * req.Volume * 100000 / float64(account.Lever),
 			}).Error
 			if err != nil {
 				panic(err)
 			}
 		}
+		//if len(orders) >= 1 {
+		//	tp := req.Type
+		//	if tp == 0 {
+		//		tp = 1
+		//	} else {
+		//		tp = 0
+		//	}
+		//	price := tick2.Bid
+		//	if tp == 0 {
+		//		price = tick2.Ask
+		//	} else {
+		//		price = tick2.Bid
+		//	}
+		//	err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
+		//		Account:       "ReverseAccount",
+		//		Symbol:        req.Symbol,
+		//		Type:          tp,
+		//		Volume:        req.Volume,
+		//		CreateTime:    tick2.Timestamp,
+		//		CreateTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+		//		Price:         price,
+		//		CloseTime:     0,
+		//		Profit:        0,
+		//		Tp:            req.Tp,
+		//		Sl:            req.Sl,
+		//		Comment: req.Comment,
+		//		Margin:  req.Price * req.Volume * 100000 / float64(account.Lever),
+		//	}).Error
+		//	if err != nil {
+		//		panic(err)
+		//	}
+		//}
 
 		price := tick2.Bid
 		if req.Type == 0 {

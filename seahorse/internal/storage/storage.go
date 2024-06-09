@@ -141,6 +141,7 @@ func New(rc *conf.Conf) *Storage {
 				})
 			}
 
+			account = models.Account{}
 			err = rs.Bb.Model(models.Account{}).Where("account = ?", "my_test").First(&account).Error
 			if err == nil {
 				rs.Bb.Model(&models.AccountLog{}).Where("funding_dynamics = ?", account.FundingDynamics).FirstOrCreate(&models.AccountLog{
