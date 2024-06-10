@@ -50,7 +50,6 @@ class Classic:
                 print(tick)
                 # self.sleepTime = tick.time + 60*60*3
                 return
-            return
         if self.highest >= 30:
             if self.highest - profit >= 15:
                 self.mt5.close_all(magic=self.magic)
@@ -59,7 +58,6 @@ class Classic:
                 print(tick)
                 # self.sleepTime = tick.time + 60*60*3
                 return
-            return
         if self.highest >= 25:
             if self.highest - profit >= 10:
                 self.mt5.close_all(magic=self.magic)
@@ -67,13 +65,24 @@ class Classic:
                 print(tick)
                 # self.sleepTime = tick.time + 60*60*3
                 self.highest = 0
+                return
         if profit < 0:
-            if abs(profit) > 300:
+            if abs(profit) > 1000:
                 self.mt5.close_all(magic=self.magic)
                 tick = self.mt5.symbol_info_tick2(symbol=self.symbol)
                 print(tick)
                 # self.sleepTime = tick.time + 60*60*3
                 self.highest = 0
+                return
+        if self.mt5.positions_total(magic=self.magic).total == 1:
+            if profit >= 5:
+                self.mt5.close_all(magic=self.magic)
+                tick = self.mt5.symbol_info_tick2(symbol=self.symbol)
+                print(tick)
+                # self.sleepTime = tick.time + 60*60*3
+                self.highest = 0
+                return
+
         # if profit >= 5:
         #     self.mt5.close_all(magic=self.magic)
         #     tick = self.mt5.symbol_info_tick2(symbol=self.symbol)

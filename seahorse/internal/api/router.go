@@ -185,7 +185,39 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 	if req.Position == 0 {
 		var orders []models.Order
 		a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).Where("close_time = 0").Find(&orders)
-		{
+		//{
+		//	tp := req.Type
+		//	if tp == 0 {
+		//		tp = 1
+		//	} else {
+		//		tp = 0
+		//	}
+		//	price := tick2.Bid
+		//	if tp == 0 {
+		//		price = tick2.Ask
+		//	} else {
+		//		price = tick2.Bid
+		//	}
+		//	err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
+		//		Account:       "ReverseAccount",
+		//		Symbol:        req.Symbol,
+		//		Type:          tp,
+		//		Volume:        req.Volume,
+		//		CreateTime:    tick2.Timestamp,
+		//		CreateTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+		//		Price:         price,
+		//		CloseTime:     0,
+		//		Profit:        0,
+		//		Tp:            req.Tp,
+		//		Sl:            req.Sl,
+		//		Comment:       req.Comment,
+		//		Margin:        req.Price * req.Volume * 100000 / float64(account.Lever),
+		//	}).Error
+		//	if err != nil {
+		//		panic(err)
+		//	}
+		//}
+		if len(orders) >= 5 {
 			tp := req.Type
 			if tp == 0 {
 				tp = 1
@@ -217,38 +249,6 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 				panic(err)
 			}
 		}
-		//if len(orders) >= 1 {
-		//	tp := req.Type
-		//	if tp == 0 {
-		//		tp = 1
-		//	} else {
-		//		tp = 0
-		//	}
-		//	price := tick2.Bid
-		//	if tp == 0 {
-		//		price = tick2.Ask
-		//	} else {
-		//		price = tick2.Bid
-		//	}
-		//	err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
-		//		Account:       "ReverseAccount",
-		//		Symbol:        req.Symbol,
-		//		Type:          tp,
-		//		Volume:        req.Volume,
-		//		CreateTime:    tick2.Timestamp,
-		//		CreateTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-		//		Price:         price,
-		//		CloseTime:     0,
-		//		Profit:        0,
-		//		Tp:            req.Tp,
-		//		Sl:            req.Sl,
-		//		Comment: req.Comment,
-		//		Margin:  req.Price * req.Volume * 100000 / float64(account.Lever),
-		//	}).Error
-		//	if err != nil {
-		//		panic(err)
-		//	}
-		//}
 
 		price := tick2.Bid
 		if req.Type == 0 {
@@ -538,6 +538,8 @@ func (a *ApiServer) web(c *gin.Context) {
 
 	getAccount := a.storage.GetAccount(account)
 
+	tick := a.storage.GetTick2()
+
 	c.Writer.Header().Set("Content-Type", "text/html")
 
 	hp := html
@@ -553,6 +555,7 @@ func (a *ApiServer) web(c *gin.Context) {
 	hp = strings.ReplaceAll(hp, "{tj}", fmt.Sprintf("%.2f", getAccount.Balance+getAccount.Profit-getAccount.Margin))
 	hp = strings.ReplaceAll(hp, "{tj2}", fmt.Sprintf("%.2f", getAccount.Balance+getAccount.Profit))
 	hp = strings.ReplaceAll(hp, "{dtmax}", fmt.Sprintf("%.2f", getAccount.FundingDynamicsMax))
+	hp = strings.ReplaceAll(hp, "{tick}", fmt.Sprintf("%.5f", tick.Ask))
 
 	var orders []models.Order
 	err = a.storage.Bb.Model(&models.Order{}).Where("close_time = 0").Where("account = ?", account).Order("create_time").Find(&orders).Error
@@ -645,6 +648,7 @@ var html = `
                 <div class="col-md-2"><strong>动态金额:</strong> {tj}</div>
                 <div class="col-md-2"><strong>动态金额2:</strong> {tj2}</div>
                 <div class="col-md-2"><strong>动态最低:</strong> {dtmax}</div>
+                <div class="col-md-2"><strong>tick:</strong> {tick}</div>
             </div>
         </div>
     </div>
