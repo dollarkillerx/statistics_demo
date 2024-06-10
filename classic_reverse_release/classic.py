@@ -108,21 +108,22 @@ class Classic:
                 else:
                     self.sleepTime = 0
 
+            # 出场判断
+            self.prominence()
+
             # 获取当前订单列表
             last_position = self.mt5.last_position()
             if last_position is None:
                 # 随机下单
                 self.direction = self.random_direction()
                 if self.direction == "buy":
-                    self.mt5.buy(self.symbol, self.initial_volume, tp=6)
+                    self.mt5.buy(self.symbol, self.initial_volume, tp=10)
                 else:
-                    self.mt5.sell(self.symbol, self.initial_volume, tp=6)
+                    self.mt5.sell(self.symbol, self.initial_volume, tp=10)
                 print("----------------new-----------------")
                 # time.sleep(100 / 1000)
                 continue
 
-            # 出场判断
-            self.prominence()
             # 加仓
             price = 0
             if self.direction == "buy":
