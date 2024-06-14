@@ -1,4 +1,3 @@
-import time
 import random
 import seahorse
 from decimal import Decimal, getcontext

@@ -31,7 +31,6 @@ class Classic:
 
     def init(self):
         self.mt5 = utils.MT5utils()
-        # self.mt5.init_account()
         self.mt5.set_currency_suffix(self.currency_suffix)
         self.mt5.set_magic(self.magic)
         self.mt5.set_def_deviation(self.deviation)
