@@ -1,7 +1,5 @@
 import json
 import time
-
-import mt5.utils
 import utils
 import urllib.request
 
@@ -95,14 +93,25 @@ class FollowMeSDK:
                     orders = [Order(**order) for order in json_data['orders']]
                     # 打印Order对象列表
                     dictMap = {}
+                    removeOrderMap = {}
 
-                    print("orders: {}".format(len(orders)))
-                    if len(orders) <= 1:
+                    for index, order in enumerate(orders):
+                        removeOrderMap[order.id] = 0
+
+                    positions = self.mt5.positions_get(magic=self.mt5.magic)
+                    for position in positions:
+                        if position.comment not in removeOrderMap:
+                            # close
+                            self.mt5.close(position.ticket)
+
+                    if len(orders) == 0:
+                        self.mt5.close_all(magic=self.mt5.magic)
+
+                    if len(orders) == 1:
                         continue
 
-                    positions = self.mt5.positions_get()
                     for position in positions:
-                        dictMap[position.magic] = 0
+                        dictMap[position.comment] = 0
 
                     for index, order in enumerate(orders):
                         if index == 0:
@@ -124,6 +133,7 @@ class FollowMeSDK:
                                     self.mt5.sell(symbol, order.amount, order.id)
                                 else:
                                     self.mt5.buy(symbol, order.amount, order.id)
+
 
 
 
