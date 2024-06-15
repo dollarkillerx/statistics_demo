@@ -9,7 +9,7 @@ import (
 
 func (s *Server) router() {
 	s.app.POST("/release", s.release)
-	s.app.POST("/subscription", s.subscription)
+	s.app.GET("/subscription", s.subscription)
 }
 
 func (s *Server) release(ctx *gin.Context) {
@@ -17,13 +17,15 @@ func (s *Server) release(ctx *gin.Context) {
 		Orders []models.Order `json:"orders"`
 	}
 
-	if err := ctx.ShouldBindJSON(&ReportRequest{}); err != nil {
+	var reportRequest ReportRequest
+
+	if err := ctx.ShouldBindJSON(&reportRequest); err != nil {
 		log.Println("error: ", err)
 		ctx.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	s.storage.SetOrder(ReportRequest{}.Orders)
+	s.storage.SetOrder(reportRequest.Orders)
 	ctx.JSON(200, gin.H{"message": "success"})
 }
 
