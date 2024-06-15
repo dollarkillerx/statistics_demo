@@ -1,6 +1,5 @@
 import json
 import time
-
 import utils
 import urllib.request
 
@@ -77,6 +76,29 @@ class FollowMeSDK:
 
     # 訂閲
     def subscription(self):
-        pass
+        while True:
+            # 创建请求对象并设置header
+            request = urllib.request.Request("{}/subscription".format(self.address), headers={'Authorization': self.token})
+            try:
+                # 发送请求并获取响应
+                with urllib.request.urlopen(request) as response:
+                    # 读取响应内容
+                    response_data = response.read()
+                    # 解析JSON数据
+                    json_data = json.loads(response_data)
+                    # 定义Order类
+                    # 解析orders数据
+                    orders = [Order(**order) for order in json_data['orders']]
+                    # 打印Order对象列表
+
+                    # for order in orders:
+                    #     print(order.id)
+
+            except urllib.error.HTTPError as e:
+                # 打印HTTP错误信息
+                print('HTTP Error:', e.code, e.reason)
+            except urllib.error.URLError as e:
+                # 打印URL错误信息
+                print('URL Error:', e.reason)
 
 
