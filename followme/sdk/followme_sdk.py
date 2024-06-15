@@ -1,5 +1,7 @@
 import json
 import time
+
+import mt5.utils
 import utils
 import urllib.request
 
@@ -34,12 +36,14 @@ class FollowMeSDK:
     address = "http://127.0.0.1:9871"
     token = "FollowMe"
     mt5_path = ""
+    suffix = ""
 
-    def __init__(self,address:str, token: str, mt5_path: str):
+    def __init__(self,address:str, token: str, mt5_path: str, suffix = ""):
         self.address = address
         self.token = token
         self.mt5_path = mt5_path
         self.mt5 = utils.MT5utils(path=mt5_path)
+        self.suffix = suffix
 
     # 發佈
     def release(self):
@@ -90,9 +94,39 @@ class FollowMeSDK:
                     # 解析orders数据
                     orders = [Order(**order) for order in json_data['orders']]
                     # 打印Order对象列表
+                    dictMap = {}
 
-                    # for order in orders:
-                    #     print(order.id)
+                    print("orders: {}".format(len(orders)))
+                    if len(orders) <= 1:
+                        continue
+
+                    positions = self.mt5.positions_get()
+                    for position in positions:
+                        dictMap[position.magic] = 0
+
+                    for index, order in enumerate(orders):
+                        if index == 0:
+                            continue
+                        if order.id not in dictMap:
+                            # 獲取當前時間
+                            symbol = ""
+                            if len(order.symbol) != 6:
+                                symbol = order.symbol[:len(order.symbol)-1] + self.suffix
+
+                            tick = self.mt5.symbol_info_tick(symbol=symbol)
+                            if tick is None:
+                                print("找不到貨幣: {}".format(symbol))
+                                exit(1)
+
+                            if abs(tick.time - order.created_time) < 15:
+                                # 下單
+                                if order.type == 0: # 反向
+                                    self.mt5.sell(symbol, order.amount, order.id)
+                                else:
+                                    self.mt5.buy(symbol, order.amount, order.id)
+
+
+
 
             except urllib.error.HTTPError as e:
                 # 打印HTTP错误信息

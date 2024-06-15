@@ -1,6 +1,11 @@
 import urllib.request
 import json
 
+
+r = "USDJPYz"
+print(r[:len(r)-1])
+
+exit(0)
 # 定义目标URL和token
 url = 'http://127.0.0.1:9871/subscription'  # 请替换为实际的URL
 token = 'FollowMe'  # 请替换为实际的token
