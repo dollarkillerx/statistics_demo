@@ -1,17 +1,22 @@
 import MetaTrader5 as mt5
 import pandas as pd
 
-
 class MT5utils:
     currency_suffix = ''
     magic = 15770
     deviation = 30
 
-    def __init__(self, user='', password=''):
-        if not mt5.initialize():
-            print("initialize() failed")
-            mt5.shutdown()
-            exit(1)
+    def __init__(self, user='', password='', path=''):
+        if path != '':
+            if not mt5.initialize(path=path, portable=True):
+                print("initialize() failed")
+                mt5.shutdown()
+                exit(1)
+        else:
+            if not mt5.initialize():
+                print("initialize() failed")
+                mt5.shutdown()
+                exit(1)
         if user != '' and password != '':
             authorized = mt5.login(user, password=password)
             if authorized:
