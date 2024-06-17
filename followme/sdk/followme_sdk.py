@@ -79,6 +79,7 @@ class FollowMeSDK:
     # 訂閲
     def subscription(self):
         while True:
+            time.sleep(100 / 1000)
             # 创建请求对象并设置header
             request = urllib.request.Request("{}/subscription".format(self.address), headers={'Authorization': self.token})
             try:
@@ -94,6 +95,7 @@ class FollowMeSDK:
                     # 打印Order对象列表
                     dictMap = {}
                     removeOrderMap = {}
+                    print("orders: {}".format(len(orders)))
 
                     for index, order in enumerate(orders):
                         removeOrderMap[order.id] = 0
@@ -124,7 +126,7 @@ class FollowMeSDK:
 
                             tick = self.mt5.symbol_info_tick(symbol=symbol)
                             if tick is None:
-                                print("找不到貨幣: {}".format(symbol))
+                                print("Error1: 找不到貨幣: {}".format(symbol))
                                 exit(1)
 
                             if abs(tick.time - order.created_time) < 15:
