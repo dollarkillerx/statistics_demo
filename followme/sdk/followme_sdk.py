@@ -108,6 +108,10 @@ class FollowMeSDK:
                         if position.comment not in removeOrderMap:
                             # close
                             self.mt5.close(position.ticket)
+                        else:
+                            print(position.comment)
+                            print(removeOrderMap)
+
 
                     if len(orders) == 0:
                         self.mt5.close_all(magic=self.mt5.magic)
