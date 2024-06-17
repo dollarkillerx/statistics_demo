@@ -119,9 +119,11 @@ class FollowMeSDK:
                         dictMap[position.comment] = 0
 
                     for index, order in enumerate(orders):
+                        print("aaaaa2222")
                         if index == 0:
                             continue
                         if order.id not in dictMap:
+                            print("aaaaa")
                             # 獲取當前時間
                             symbol = ""
                             if len(order.symbol) != 6:
