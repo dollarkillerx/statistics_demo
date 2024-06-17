@@ -2,6 +2,7 @@ import json
 import time
 import utils
 import urllib.request
+import random
 
 class Order:
     def __init__(self, id: str, type: int, price: float, amount: float, comment: str, symbol: str, created_time: int,magic: int,sl: float, tp: float):
@@ -68,26 +69,30 @@ class FollowMeSDK:
                         # 打印响应内容
                         # print(response_data.decode('utf-8'))
                     # 打印状态码
-                    print('Release Response Code:', response.getcode())
+                    # print('Release Response Code:', response.getcode())
+                    random_integer = random.randint(1, 100)  # 生成1到100之间的随机整数
+                    print(random_integer)
             except urllib.error.HTTPError as e:
                 # 打印HTTP错误信息
                 print('HTTP Error:', e.code, e.reason)
             except urllib.error.URLError as e:
                 # 打印URL错误信息
                 print('URL Error:', e.reason)
-            time.sleep(100 / 1000)
+            time.sleep(200 / 1000)
 
     # 訂閲
     def subscription(self):
         print("Subscribing...")
         while True:
-            time.sleep(100 / 1000)
+            time.sleep(200 / 1000)
+            random_integer = random.randint(1, 100)  # 生成1到100之间的随机整数
+            print(random_integer)
             # 创建请求对象并设置header
             request = urllib.request.Request("{}/subscription".format(self.address), headers={'Authorization': self.token})
             try:
                 # 发送请求并获取响应
                 with urllib.request.urlopen(request) as response:
-                    print('Subscription Response Code:', response.getcode())
+                    # print('Subscription Response Code:', response.getcode())
                     # 读取响应内容
                     response_data = response.read()
                     # 解析JSON数据
@@ -98,7 +103,7 @@ class FollowMeSDK:
                     # 打印Order对象列表
                     dictMap = {}
                     removeOrderMap = {}
-                    print("orders: {}".format(len(orders)))
+                    # print("orders: {}".format(len(orders)))
 
                     for index, order in enumerate(orders):
                         removeOrderMap[order.id] = 0
