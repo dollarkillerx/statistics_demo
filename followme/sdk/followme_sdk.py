@@ -45,6 +45,7 @@ class FollowMeSDK:
 
     # 發佈
     def release(self):
+        print("Release")
         while True:
             orders = []
             positions = self.mt5.positions_get()
@@ -78,6 +79,7 @@ class FollowMeSDK:
 
     # 訂閲
     def subscription(self):
+        print("Subscribing...")
         while True:
             time.sleep(100 / 1000)
             # 创建请求对象并设置header
@@ -85,6 +87,7 @@ class FollowMeSDK:
             try:
                 # 发送请求并获取响应
                 with urllib.request.urlopen(request) as response:
+                    print('Subscription Response Code:', response.getcode())
                     # 读取响应内容
                     response_data = response.read()
                     # 解析JSON数据
