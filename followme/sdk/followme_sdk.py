@@ -119,11 +119,9 @@ class FollowMeSDK:
                         dictMap[position.comment] = 0
 
                     for index, order in enumerate(orders):
-                        print("aaaaa2222")
                         if index == 0:
                             continue
                         if order.id not in dictMap:
-                            print("aaaaa")
                             # 獲取當前時間
                             symbol = ""
                             if len(order.symbol) != 6:
@@ -134,14 +132,12 @@ class FollowMeSDK:
                                 print("Error1: 找不到貨幣: {}".format(symbol))
                                 exit(1)
 
-                            if abs(tick.time - order.created_time) < 15:
+                            if abs(tick.time - order.created_time) < 6*60*60: # 6h
                                 # 下單
                                 if order.type == 0: # 反向
                                     self.mt5.sell(symbol, order.amount, order.id)
                                 else:
                                     self.mt5.buy(symbol, order.amount, order.id)
-
-
 
 
 
