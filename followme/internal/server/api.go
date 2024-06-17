@@ -1,6 +1,7 @@
 package server
 
 import (
+	"followme/internal/conf"
 	"followme/internal/models"
 	"github.com/gin-gonic/gin"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func (s *Server) router() {
-	s.app.POST("/release", s.release)
+	s.app.POST("/release", auth(conf.Config.Header), s.release)
 	s.app.GET("/subscription", s.subscription)
 }
 

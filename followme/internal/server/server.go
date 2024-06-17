@@ -19,7 +19,7 @@ func New() *Server {
 }
 
 func (s *Server) Run() error {
-	s.app.Use(auth(conf.Config.Header))
+	//s.app.Use()
 
 	s.router()
 	return s.app.Run(conf.Config.Address)
