@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -21,6 +22,7 @@ type TVResp struct {
 	Action    string `json:"action"`
 	Contracts string `json:"contracts"`
 	Price     string `json:"price"`
+	Time      int    `json:"time"`
 }
 
 func (t *TVResp) ToJSON() string {
@@ -54,6 +56,7 @@ func (s *Server) tradingview(ctx *gin.Context) {
 		})
 		return
 	}
+	input.Time = int(time.Now().Unix())
 
 	log.Info().Msgf("input: %s", input.ToJSON())
 

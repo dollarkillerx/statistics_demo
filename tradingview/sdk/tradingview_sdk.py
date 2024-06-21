@@ -2,11 +2,12 @@ import json
 import urllib.request
 
 class TradingData:
-    def __init__(self, ticker, action, contracts, price):
+    def __init__(self, ticker, action, contracts, price,time):
         self.ticker = ticker
         self.action = action
         self.contracts = contracts
         self.price = price
+        self.time = time
 
     def __repr__(self):
         return f"TradingData(ticker={self.ticker}, action={self.action}, contracts={self.contracts}, price={self.price})"
@@ -30,5 +31,6 @@ class TradingviewSDK:
             ticker=json_data['ticker'],
             action=json_data['action'],
             contracts=json_data['contracts'],
-            price=json_data['price']
+            price=json_data['price'],
+            time=json_data['time']
         )
