@@ -111,6 +111,7 @@ class Cgs:
     def run(self):
         while True:
             symbol_info_tick = self.mt5.symbol_info_tick(symbol=self.symbol)
+
             self.prominence()
 
             # 如果buy單是空的 收到了 buy信號 就開單
@@ -164,6 +165,7 @@ class Cgs:
                                       round(sell_last_order.volume + self.increase_multiple,
                                             2))
 
+            time.sleep(100 / 1000)
 
 
 
