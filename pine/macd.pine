@@ -1,0 +1,41 @@
+indicator("MACD #2", overlay = true)
+fastInput = input(12, "Fast length")  // 輸入一個快綫
+slowInput = input(26, "Slow length")  // 輸入一個慢綫
+[macdLine, signalLine, histLine] = ta.macd(close, fastInput, slowInput, 9) // 通過close 計算
+// plot(macdLine, color = color.blue)
+// plot(signalLine, color = color.orange)
+
+
+up = ta.crossover(macdLine, signalLine) // 記錄buy點
+down = ta.crossover(signalLine,macdLine) // 記錄sell 點
+
+plotchar(up,text="buy", color = color.red) // 畫圖
+plotchar(down,text="sell", color = color.blue)
+
+
+// 基於macd的策略
+
+//@version=5
+indicator("MACD #2", overlay = true)
+fast = 12  // 定義快綫
+slow = 26  // 定義慢綫
+fastMA = ta.ema(close, fast) // 定義快綫 ema （收盤價，fast）
+slowMA = ta.ema(close, slow) // 定義慢綫 ems （收盤價，slow）
+p1  = plot(fastMA, color = color.blue)  // 畫圖 macd 這個價格 顔色為 blue
+p2 = plot(slowMA, color = color.orange)  // 畫圖 signal 這個價格 顔色為 blue
+
+
+up = ta.crossover(fastMA, slowMA) // 記錄buy點
+down = ta.crossover(slowMA,fastMA) // 記錄sell 點
+
+plotchar(up,text="buy", color = color.red) // 畫圖
+plotchar(down,text="sell", color = color.blue)
+
+var cor = color.green
+
+if fastMA > slowMA
+    cor := color.red   // 子作用域 賦值上面
+else
+    cor := color.blue
+
+fill(p1, p2, color=color.new(cor, 90)) // 填充綫條
