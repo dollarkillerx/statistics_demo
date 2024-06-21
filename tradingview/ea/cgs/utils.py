@@ -339,10 +339,14 @@ class MT5utils:
         if positions is not None:
             for pos in positions:
                 self.close(pos.ticket)
-        return
 
 
     # 獲取某個方向的盈利
     def profit_by_order_type(self, orderType="buy", symbol=""):
-        pass
+        profit = 0
+        positions = self.positions_get_by_type(orderType=orderType, symbol=symbol)
+        if positions is not None:
+            for pos in positions:
+                profit += pos.profit
+        return profit
 
