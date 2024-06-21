@@ -6,7 +6,7 @@ getcontext().prec = 28
 
 class Classic:
     direction = "buy" # 方向
-    magic = 0 # 魔术手
+    magic = 0 # 魔术手666666
     deviation = 20 # 滑点
     currency_suffix = "c"  # 货币后缀
     initial_volume = 0.01  # 初始volume
