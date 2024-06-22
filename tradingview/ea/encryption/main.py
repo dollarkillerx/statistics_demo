@@ -11,7 +11,7 @@ Symbol = "BTCUSD"  # 基础
 Interval = 100  # 加仓间隔
 TimeInterval = 15  # 时间间隔 default 30分
 tradingview_sdk_url = "https://tradingview.dollarkiller.com"
-md5_path=""
+md5_path="C:\\Users\\Administrator\\Desktop\\MT3\\terminal64.exe"
 max_order=3
 #########################################################
 

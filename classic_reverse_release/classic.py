@@ -30,7 +30,7 @@ class Classic:
         self.time_interval = time_interval
 
     def init(self):
-        self.mt5 = utils.MT5utils(path="C:\\Users\\Administrator\\Desktop\\mt1\\terminal64.exe")
+        self.mt5 = utils.MT5utils(path="C:\\Users\\Administrator\\Desktop\\MT1\\terminal64.exe")
         self.mt5.set_currency_suffix(self.currency_suffix)
         self.mt5.set_magic(self.magic)
         self.mt5.set_def_deviation(self.deviation)
