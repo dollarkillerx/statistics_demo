@@ -4,7 +4,7 @@ import cgs
 # 初始化参数
 Magic = 666  # 魔术手
 Deviation = 30  # 滑点
-CurrencySuffix = "c"  # 货币后缀
+CurrencySuffix = "m"  # 货币后缀
 InitialVolume = 0.01  # 初始volume
 IncreaseMultiple = 0.01  # 加仓倍数
 Symbol = "EURUSD"  # 基础
