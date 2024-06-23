@@ -30,7 +30,8 @@ class Classic:
         self.time_interval = time_interval
 
     def init(self):
-        self.mt5 = utils.MT5utils(path="C:\\Users\\Administrator\\Desktop\\MT1\\terminal64.exe")
+        self.mt5 = utils.Seahorse("127.0.0.1:8475", "my_test",5000,2000)
+        self.mt5.init_account()
         self.mt5.set_currency_suffix(self.currency_suffix)
         self.mt5.set_magic(self.magic)
         self.mt5.set_def_deviation(self.deviation)
@@ -38,56 +39,9 @@ class Classic:
     # 出场
     def prominence(self):
         profit = self.mt5.profit(magic=self.magic)
-        # 移动止损
-        if self.highest <= profit:
-            self.highest = profit
-        if self.highest >= 40:
-            if self.highest - profit >= 15:
-                self.mt5.close_all(magic=self.magic)
-                self.highest = 0
-                tick = self.mt5.symbol_info_tick(symbol=self.symbol)
-                print(tick)
-                self.sleepTime = tick.time + 60*60*3
-                return
-        if self.highest >= 30:
-            if self.highest - profit >= 15:
-                self.mt5.close_all(magic=self.magic)
-                self.highest = 0
-                tick = self.mt5.symbol_info_tick(symbol=self.symbol)
-                print(tick)
-                self.sleepTime = tick.time + 60*60*3
-                return
-        if self.highest >= 25:
-            if self.highest - profit >= 10:
-                self.mt5.close_all(magic=self.magic)
-                tick = self.mt5.symbol_info_tick(symbol=self.symbol)
-                print(tick)
-                self.sleepTime = tick.time + 60*60*3
-                self.highest = 0
-                return
-        if profit < 0:
-            if abs(profit) > 1000:
-                self.mt5.close_all(magic=self.magic)
-                tick = self.mt5.symbol_info_tick(symbol=self.symbol)
-                print(tick)
-                self.sleepTime = tick.time + 60*60*3
-                self.highest = 0
-                return
-        if self.mt5.positions_total(magic=self.magic) == 1:
-            if profit >= 5:
-                self.mt5.close_all(magic=self.magic)
-                tick = self.mt5.symbol_info_tick(symbol=self.symbol)
-                print(tick)
-                self.sleepTime = tick.time + 60*60*3
-                self.highest = 0
-                return
+        if profit > 3:
+            self.mt5.close_all()
 
-        # if profit >= 5:
-        #     self.mt5.close_all(magic=self.magic)
-        #     tick = self.mt5.symbol_info_tick2(symbol=self.symbol)
-        #     print(tick)
-        #     self.sleepTime = tick.time + 60*60*3
-        #
 
     # 随机方向
     def random_direction(self):
@@ -96,16 +50,30 @@ class Classic:
             return "buy"
         return "sell"
 
+    def next_direction(self):
+        positions = self.mt5.positions_get(symbol=self.symbol, magic=self.magic)
+        buyFloat = 0.0
+        selFloat = 0.0
+        for position in positions:
+            if position.type == 0:
+                buyFloat += position.profit
+            else:
+                selFloat += position.profit
+        if buyFloat > selFloat:
+            return "buy"
+        return "sell"
+
+    def ok(self, ask: float):
+        positions = self.mt5.positions_get(symbol=self.symbol, magic=self.magic)
+        for position in positions:
+            if abs(position.price_open -  ask) < 5:
+                return False
+        return True
+
     def run(self):
         while True:
+            self.mt5.next() # 获取tick
             symbol_info_tick = self.mt5.symbol_info_tick(symbol=self.symbol)
-            # 是否休息
-            if self.sleepTime != 0:
-                if self.sleepTime < symbol_info_tick.time:
-                    print("continue")
-                    continue
-                else:
-                    self.sleepTime = 0
 
             # 出场判断
             self.prominence()
@@ -124,24 +92,22 @@ class Classic:
                 continue
 
             # 加仓
-            price = 0
-            if self.direction == "buy":
-                price = symbol_info_tick.ask
-            else:
-                price = symbol_info_tick.bid
+            price = symbol_info_tick.ask
             if abs(Decimal(
                     str((Decimal(str(last_position.price_open)) - Decimal(str(price))))) * 10000) > self.interval:
                         if abs(last_position.time_update - symbol_info_tick.time) > self.time_interval * 60:
                                 profit = self.mt5.profit()
-                                if profit < 0.2:
-                                    if self.direction == "buy":
-                                        self.mt5.sell(self.symbol,
-                                                      round(last_position.volume + self.increase_multiple,
-                                                            2))
-                                    else:
-                                        self.mt5.buy(self.symbol,
-                                                     round(last_position.volume + self.increase_multiple,
-                                                           2))
+                                if profit < 5:
+                                    if self.ok(price):
+                                        if self.next_direction() == "buy":
+                                            self.mt5.buy(self.symbol,
+                                                         round(last_position.volume * 2,
+                                                               2))
+                                        else:
+                                            self.mt5.buy(self.symbol,
+                                                         round(last_position.volume * 2,
+                                                               2))
+
 
 
             time.sleep(100 / 1000)
