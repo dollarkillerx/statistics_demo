@@ -95,6 +95,7 @@ loop:
 				continue
 			}
 
+		bj:
 			line, _, err := reader.ReadLine()
 			if err != nil {
 				break loop
@@ -104,6 +105,9 @@ loop:
 			var tickItem models.TickItem
 			err = json.Unmarshal([]byte(lines), &tickItem)
 			if err == nil {
+				if tickItem.Time < 1713882010 {
+					goto bj
+				}
 				s.tickChannel <- models.Tick{
 					Symbol:    "EURUSD",
 					Timestamp: tickItem.Time,
@@ -230,6 +234,78 @@ func (s *Storage) GetAccount(account string) models.Account {
 		"funding_dynamics_max": accountInfo.FundingDynamicsMax,
 		"funding_dynamics":     fundingDynamics,
 	}).Error
+
+	go func() {
+		account := "RJC"
+		var accountInfo models.Account
+		err := s.Bb.Model(&models.Account{}).Where("account = ?", account).First(&accountInfo).Error
+		if err != nil {
+			panic(err)
+		}
+
+		var orders []models.Order
+		err = s.Bb.Model(&models.Order{}).Where("account = ?", account).
+			Where("close_time = 0").Find(&orders).Error
+
+		tick := s.GetTick()
+
+		var myProfile float64
+		var margin float64
+		for idx, order := range orders {
+			price := tick.Ask
+			var profile float64
+			if order.Type == 1 { // 如果当前订单为sell
+				price = tick.Ask // 这做空平仓
+				profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+			} else {
+				price = tick.Bid // 做多
+				profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+			}
+
+			orders[idx].Price = price
+			orders[idx].Profit = profile
+
+			myProfile += profile
+			margin += orders[idx].Margin
+		}
+
+		accountInfo.Profit = myProfile
+		accountInfo.Margin = margin
+
+		// 最大持仓
+		if accountInfo.LargestPosition < len(orders) {
+			accountInfo.LargestPosition = len(orders)
+		}
+		// 最大亏损
+		if myProfile < 0 {
+			if myProfile < accountInfo.LargestLoss {
+				accountInfo.LargestLoss = myProfile
+			}
+		}
+		// 最大盈利
+		if myProfile > 0 {
+			if myProfile > accountInfo.LargestProfit {
+				accountInfo.LargestProfit = myProfile
+			}
+		}
+
+		fundingDynamics := accountInfo.Balance + accountInfo.Profit
+		if accountInfo.FundingDynamicsMax == 0 {
+			accountInfo.FundingDynamicsMax = fundingDynamics
+		}
+		if fundingDynamics < accountInfo.FundingDynamicsMax {
+			accountInfo.FundingDynamicsMax = fundingDynamics
+		}
+
+		// up
+		err = s.Bb.Model(&models.Account{}).Where("account = ?", account).Updates(map[string]interface{}{
+			"largest_position":     accountInfo.LargestPosition,
+			"largest_loss":         accountInfo.LargestLoss,
+			"largest_profit":       accountInfo.LargestProfit,
+			"funding_dynamics_max": accountInfo.FundingDynamicsMax,
+			"funding_dynamics":     fundingDynamics,
+		}).Error
+	}()
 
 	return accountInfo
 }

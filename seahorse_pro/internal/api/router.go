@@ -57,6 +57,19 @@ func (a *ApiServer) apiInit(c *gin.Context) {
 		panic(err)
 	}
 
+	err = a.storage.Bb.Model(&models.Account{}).Create(&models.Account{
+		Account:         "RJC",
+		InitialAmount:   req.Balance,
+		Balance:         req.Balance,
+		Lever:           req.Lever,
+		LargestPosition: 0,
+		LargestLoss:     0,
+		LargestProfit:   0,
+	}).Error
+	if err != nil {
+		panic(err)
+	}
+
 	c.JSON(200, models.RespInit{
 		Account: req.Account,
 		Error:   "",
@@ -140,9 +153,6 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 
 	// 进场
 	if req.Position == 0 {
-		var orders []models.Order
-		a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).Where("close_time = 0").Find(&orders)
-
 		price := tick.Bid
 		if req.Type == 0 {
 			price = tick.Ask
@@ -150,7 +160,7 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 			price = tick.Bid
 		}
 
-		err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
+		var order = models.Order{
 			Account:       req.Account,
 			Symbol:        req.Symbol,
 			Type:          req.Type,
@@ -164,11 +174,44 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 			Sl:            req.Sl,
 			Comment:       req.Comment,
 			Margin:        req.Price * req.Volume * 100000 / float64(account.Lever),
-		}).Error
+		}
+		err := a.storage.Bb.Model(&models.Order{}).Create(&order).Error
 		if err != nil {
 			panic(err)
 		}
 
+		{
+			price := tick.Bid
+			if req.Type != 0 {
+				price = tick.Ask
+			} else {
+				price = tick.Bid
+			}
+
+			rType := 0
+			if req.Type == 0 {
+				rType = 1
+			}
+
+			err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
+				Account:       "RJC",
+				Symbol:        req.Symbol,
+				Type:          rType,
+				Volume:        req.Volume,
+				CreateTime:    tick.Timestamp,
+				CreateTimeStr: time.Unix(tick.Timestamp, 0).Format("2006-01-02 15:04:05"),
+				Price:         price,
+				CloseTime:     0,
+				Profit:        0,
+				Tp:            req.Tp,
+				Sl:            req.Sl,
+				Comment:       fmt.Sprintf("%d", order.ID),
+				Margin:        req.Price * req.Volume * 100000 / float64(account.Lever),
+			}).Error
+			if err != nil {
+				panic(err)
+			}
+		}
 	} else {
 		// 出场
 		var order models.Order
@@ -199,8 +242,41 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 			panic(err)
 		}
 
-		a.storage.Bb.Model(&models.Account{}).Where("account = ?", req.Account).
+		a.storage.Bb.Model(&models.Account{}).Where("account = ?", order.Account).
 			UpdateColumn("balance", gorm.Expr("balance + ?", profit))
+
+		{
+			var order models.Order
+			err := a.storage.Bb.Model(&models.Order{}).Where("comment = ?", fmt.Sprintf("%d", req.Position)).First(&order).Error
+			if err != nil {
+				panic(err)
+			}
+
+			// 计算盈利
+			var profit float64
+			var price float64
+			if order.Type == 1 { // 如果当前订单为sell
+				price = tick.Ask // 这做空平仓
+				profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+			} else {
+				price = tick.Bid // 做多
+				profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+			}
+
+			err = a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).Updates(map[string]interface{}{
+				"close_price":    price,
+				"close_time":     tick.Timestamp,
+				"close_time_str": time.Unix(tick.Timestamp, 0).Format("2006-01-02 15:04:05"),
+				"profit":         profit,
+				"comment":        req.Comment,
+			}).Error
+			if err != nil {
+				panic(err)
+			}
+
+			a.storage.Bb.Model(&models.Account{}).Where("account = ?", order.Account).
+				UpdateColumn("balance", gorm.Expr("balance + ?", profit))
+		}
 	}
 
 	c.JSON(200, gin.H{
