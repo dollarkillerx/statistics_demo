@@ -66,7 +66,8 @@ class Classic:
     def ok(self, ask: float):
         positions = self.mt5.positions_get(symbol=self.symbol, magic=self.magic)
         for position in positions:
-            if abs(position.price_open -  ask) < 5:
+            if abs(position.price_open -  ask) < 0.0005:
+                # print(position.price_open -  ask)
                 return False
         return True
 
@@ -96,21 +97,21 @@ class Classic:
             if abs(Decimal(
                     str((Decimal(str(last_position.price_open)) - Decimal(str(price))))) * 10000) > self.interval:
                         if abs(last_position.time_update - symbol_info_tick.time) > self.time_interval * 60:
-                                profit = self.mt5.profit()
-                                if profit < 5:
-                                    if self.ok(price):
-                                        if self.next_direction() == "buy":
-                                            self.mt5.buy(self.symbol,
-                                                         round(last_position.volume * 2,
-                                                               2))
-                                        else:
-                                            self.mt5.buy(self.symbol,
-                                                         round(last_position.volume * 2,
-                                                               2))
+                            profit = self.mt5.profit()
+                            if profit < 0:
+                                if self.ok(price):
+                                    if self.next_direction() == "buy":
+                                        self.mt5.buy(self.symbol,
+                                                     round(last_position.volume * 2,
+                                                           2))
+                                    else:
+                                        self.mt5.buy(self.symbol,
+                                                     round(last_position.volume * 2,
+                                                           2))
 
 
 
-            time.sleep(100 / 1000)
+            # time.sleep(100 / 1000)
 
 
 

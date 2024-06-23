@@ -77,6 +77,11 @@ func (a *ApiServer) symbolInfoTick(c *gin.Context) {
 
 	tick := a.storage.GetTick()
 
+	if tick.Ask == 0 {
+		a.storage.Next()
+		tick = a.storage.GetTick()
+	}
+
 	c.JSON(200, models.RespSymbolInfoTick{
 		Ask:       tick.Ask,
 		Bid:       tick.Bid,

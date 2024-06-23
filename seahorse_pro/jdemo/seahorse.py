@@ -94,11 +94,13 @@ class Seahorse:
                 "price": price,
                 "account": self.account,
             }
+
+
             if sl != 0:
-                request['sl'] = price - sl * point * 10
+                sl = price - sl * point * 10
             if tp != 0:
-                request['tp'] = price + tp * point * 10
-            self._orderSend(0, symbol, volume, price, 0)
+                tp = price + tp * point * 10
+            self._orderSend(0, symbol, volume, price, 0, sl,tp)
         except Exception as e:
             print(f'buy exception: {e}')
             exit(1)
@@ -118,10 +120,10 @@ class Seahorse:
                 "account": self.account,
             }
             if sl != 0:
-                request['sl'] = price + sl * point * 10
+                sl = price + sl * point * 10
             if tp != 0:
-                request['tp'] = price - tp * point * 10
-            self._orderSend(0, symbol, volume, price, 1)
+                tp = price - tp * point * 10
+            self._orderSend(0, symbol, volume, price, 1,sl,tp)
         except Exception as e:
             print(f'sell exception: {e}')
             exit(1)
@@ -253,7 +255,7 @@ class Seahorse:
         except urllib.error.URLError as e:
             raise ValueError(e)
 
-    def _orderSend(self, position: int, symbol: str, volume: float, price: float, typ: int):
+    def _orderSend(self, position: int, symbol: str, volume: float, price: float, typ: int, sl: float, tp: float):
         url = "http://{}/api/v1/order_send".format(self.address)
         data = {
             "position": position,
@@ -262,6 +264,8 @@ class Seahorse:
             "type":    typ,
             "price":   price,
             "account": self.account,
+            "sl": sl,
+            "tp": tp,
         }
 
         # 将数据编码为 JSON
@@ -309,7 +313,7 @@ class Seahorse:
                 price = ask_price
                 type = 0
 
-            self._orderSend(position.ticket, position.symbol, position.volume, price, type)
+            self._orderSend(position.ticket, position.symbol, position.volume, price, type,0,0)
         except Exception as e:
             print(f'close exception: {e}')
             exit(1)

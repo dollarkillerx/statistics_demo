@@ -3,7 +3,7 @@ import classic
 #########################################################
 # 初始化参数
 Direction = "sell"  # buy sell 初始方向
-Magic = 666  # 魔术手
+Magic = 0  # 魔术手
 Deviation = 30  # 滑点
 CurrencySuffix = "c"  # 货币后缀
 InitialVolume = 0.01  # 初始volume
