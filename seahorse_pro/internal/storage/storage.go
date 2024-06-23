@@ -232,3 +232,54 @@ func (s *Storage) GetAccount(account string) models.Account {
 
 	return accountInfo
 }
+
+// ProfitAndLossCalculation 计算盈亏
+func (s *Storage) ProfitAndLossCalculation(account string) {
+	s.Bb.Transaction(func(tx *gorm.DB) error {
+		var accountInfo models.Account
+		err := tx.Model(&models.Account{}).Where("account = ?", account).First(&accountInfo).Error
+		if err != nil {
+			panic(err)
+		}
+
+		var orders []models.Order
+		err = tx.Model(&models.Order{}).Where("account = ?", account).
+			Where("close_time = 0").Find(&orders).Error
+
+		tick := s.GetTick()
+
+		var myProfile float64
+		var margin float64
+		for idx, order := range orders {
+			price := tick.Ask
+			var profile float64
+			if order.Type == 1 { // 如果当前订单为sell
+				price = tick.Ask // 这做空平仓
+				profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+			} else {
+				price = tick.Bid // 做多
+				profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+			}
+
+			orders[idx].Price = price
+			orders[idx].Profit = profile
+
+			myProfile += profile
+			margin += orders[idx].Margin
+		}
+
+		accountInfo.Profit = myProfile
+		accountInfo.Margin = margin
+
+		// 净值日志
+		alog := models.AccountLog{
+			Account:         account,
+			OrderTotal:      len(orders),
+			FundingDynamics: accountInfo.Balance + accountInfo.Profit,
+		}
+
+		s.Bb.Create(&alog)
+
+		return nil
+	})
+}

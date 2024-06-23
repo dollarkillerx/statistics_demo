@@ -36,7 +36,7 @@ type Account struct {
 	LargestProfit   float64 `json:"largest_profit"`   // 最大盈利
 
 	FundingDynamicsMax float64 `json:"funding_dynamics_max"` // 动态资金max
-	FundingDynamics    float64 `json:"funding_dynamics"`     // 动态资金max
+	FundingDynamics    float64 `json:"funding_dynamics"`     // 动态资金
 
 	Profit float64 `json:"profit"` // 利润
 	Margin float64 `json:"margin"` // 保证金
@@ -45,6 +45,7 @@ type Account struct {
 type AccountLog struct {
 	gorm.Model
 	Account         string  `json:"account"`
+	OrderTotal      int     `json:"order_total"`
 	FundingDynamics float64 `json:"funding_dynamics"` // 动态资金max
 }
 

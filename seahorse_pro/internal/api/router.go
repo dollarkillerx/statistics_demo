@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/xid"
 	"gorm.io/gorm"
 	"seahorse/internal/models"
 )
@@ -23,7 +22,6 @@ func (a *ApiServer) RegisterRoutes() {
 		v1.POST("/order_send", a.orderSend)
 		v1.POST("/positions_total", a.positionsTotal)
 		v1.POST("/positions_get", a.positionsGet)
-		v1.POST("/close_all", a.closeAll)
 		v1.POST("/account_info", a.accountInfo)
 	}
 
@@ -115,6 +113,9 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		panic(err)
 	}
+
+	go a.storage.ProfitAndLossCalculation(req.Account)
+
 	// 未来考虑加入滑点
 	account := a.storage.GetAccount(req.Account)
 	if account.Profit < 0 {
@@ -245,17 +246,17 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 		}
 	}
 
-	tick2 := a.storage.GetTick2()
+	tick := a.storage.GetTick()
 
 	var items = make([]models.RespOrderPosition, 0)
 	for _, order := range orders {
-		price := tick2.Ask
+		price := tick.Ask
 		var profile float64
 		if order.Type == 1 { // 如果当前订单为sell
-			price = tick2.Ask // 这做空平仓
+			price = tick.Ask // 这做空平仓
 			profile = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
 		} else {
-			price = tick2.Bid // 做多
+			price = tick.Bid // 做多
 			profile = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
 		}
 
@@ -272,8 +273,6 @@ func (a *ApiServer) positionsGet(c *gin.Context) {
 		})
 	}
 
-	a.storage.Record(items)
-
 	c.JSON(200, models.RespOrderPositionsGet{
 		Items: items,
 	})
@@ -289,119 +288,6 @@ func (a *ApiServer) accountInfo(c *gin.Context) {
 	c.JSON(200, account)
 }
 
-func (a *ApiServer) closeAll(c *gin.Context) {
-	var req models.CloseAllReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		panic(err)
-	}
-	id := xid.New().String()
-
-	// 获取所有订单计算利润
-	var orders []models.Order
-	a.storage.Bb.Model(&models.Order{}).
-		Where("account = ?", req.Account).
-		Where("close_time = 0").Find(&orders)
-
-	var vol float64
-	tick2 := a.storage.GetTick2()
-	var myProfile float64
-	for _, order := range orders {
-		var profit float64
-		var price float64
-		if order.Type == 1 { // 如果当前订单为sell
-			price = tick2.Ask // 这做空平仓
-			profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
-		} else {
-			price = tick2.Bid // 做多
-			profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
-		}
-
-		vol += order.Volume
-		myProfile += profit
-		// close
-		a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).
-			Updates(map[string]interface{}{
-				"close_price":    price,
-				"close_time":     tick2.Timestamp,
-				"close_time_str": time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-				"profit":         profit,
-				"comment":        id,
-			})
-	}
-
-	a.storage.Bb.Model(&models.Account{}).Where("account = ?", req.Account).
-		UpdateColumn("balance", gorm.Expr("balance + ?", myProfile))
-
-	a.storage.RecordUp(tick2.Timestamp)
-
-	a.storage.Bb.Model(&models.OrderHistory{}).Create(&models.OrderHistory{
-		Account:      req.Account,
-		CloseTime:    tick2.Timestamp,
-		CloseTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-		Profit:       myProfile,
-		Position:     len(orders),
-		Volume:       vol,
-		Comment:      id,
-	})
-
-	// 反向订单平
-	{
-		id := xid.New().String()
-
-		// 获取所有订单计算利润
-		var orders []models.Order
-		a.storage.Bb.Model(&models.Order{}).
-			Where("account = ?", "ReverseAccount").
-			Where("close_time = 0").Find(&orders)
-
-		var vol float64
-		tick2 := a.storage.GetTick2()
-		var myProfile float64
-		for _, order := range orders {
-			var profit float64
-			var price float64
-			if order.Type == 1 { // 如果当前订单为sell
-				price = tick2.Ask // 这做空平仓
-				profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
-			} else {
-				price = tick2.Bid // 做多
-				profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
-			}
-
-			vol += order.Volume
-			myProfile += profit
-			// close
-			a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).
-				Updates(map[string]interface{}{
-					"close_price":    price,
-					"close_time":     tick2.Timestamp,
-					"close_time_str": time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-					"profit":         profit,
-					"comment":        id,
-				})
-		}
-
-		a.storage.Bb.Model(&models.Account{}).Where("account = ?", "ReverseAccount").
-			UpdateColumn("balance", gorm.Expr("balance + ?", myProfile))
-
-		a.storage.RecordUp(tick2.Timestamp)
-
-		a.storage.Bb.Model(&models.OrderHistory{}).Create(&models.OrderHistory{
-			Account:      "ReverseAccount",
-			CloseTime:    tick2.Timestamp,
-			CloseTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-			Profit:       myProfile,
-			Position:     len(orders),
-			Volume:       vol,
-			Comment:      id,
-		})
-	}
-
-	c.JSON(200, gin.H{
-		"error": "",
-	})
-}
-
 func (a *ApiServer) web(c *gin.Context) {
 	account := c.Query("account")
 	var ac models.Account
@@ -415,7 +301,7 @@ func (a *ApiServer) web(c *gin.Context) {
 
 	getAccount := a.storage.GetAccount(account)
 
-	tick := a.storage.GetTick2()
+	tick := a.storage.GetTick()
 
 	c.Writer.Header().Set("Content-Type", "text/html")
 
@@ -440,7 +326,7 @@ func (a *ApiServer) web(c *gin.Context) {
 		panic(err)
 	}
 
-	tick2 := a.storage.GetTick2()
+	tick2 := a.storage.GetTick()
 
 	var items []models.RespOrderPosition
 	for _, order := range orders {
