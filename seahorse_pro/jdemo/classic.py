@@ -39,7 +39,7 @@ class Classic:
     # 出场
     def prominence(self):
         profit = self.mt5.profit(magic=self.magic)
-        if profit > 3:
+        if profit > 25:
             self.mt5.close_all()
 
 
@@ -100,16 +100,35 @@ class Classic:
                     str((Decimal(str(last_position.price_open)) - Decimal(str(price))))) * 10000) > self.interval:
                         if abs(last_position.time_update - symbol_info_tick.time) > self.time_interval * 60:
                             profit = self.mt5.profit()
-                            if profit < 0:
+                            xm = -3
+                            to = self.mt5.positions_total().total
+                            if to > 4:
+                                xm = -15
+                            elif to == 1:
+                                xm = -1
+
+                            if profit < xm:
                                 if self.ok(price):
                                     if self.next_direction() == "buy":
-                                        self.mt5.buy(self.symbol,
-                                                     round(last_position.volume * 2,
-                                                           2))
+                                        if round(last_position.volume * 1.5,
+                                                           2) == last_position.volume:
+                                            self.mt5.buy(self.symbol,
+                                                         round(last_position.volume + 0.01,
+                                                               2))
+                                        else:
+                                            self.mt5.buy(self.symbol,
+                                                         round(last_position.volume * 1.5,
+                                                               2))
                                     else:
-                                        self.mt5.buy(self.symbol,
-                                                     round(last_position.volume * 2,
-                                                           2))
+                                        if round(last_position.volume * 1.5,
+                                                 2) == last_position.volume:
+                                            self.mt5.sell(self.symbol,
+                                                         round(last_position.volume + 0.01,
+                                                               2))
+                                        else:
+                                            self.mt5.sell(self.symbol,
+                                                         round(last_position.volume * 1.5,
+                                                               2))
 
 
 
