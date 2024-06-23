@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os"
 	"strings"
 	"time"
 
@@ -18,6 +17,7 @@ func (a *ApiServer) RegisterRoutes() {
 	v1 := a.gin.Group("/api/v1")
 	{
 		v1.POST("/init", a.apiInit)
+		v1.POST("/next", a.next)
 		v1.POST("/symbol_info", a.symbolInfo)
 		v1.POST("/symbol_info_tick", a.symbolInfoTick)
 		v1.POST("/order_send", a.orderSend)
@@ -28,6 +28,13 @@ func (a *ApiServer) RegisterRoutes() {
 	}
 
 	a.gin.GET("web", a.web)
+}
+
+func (a *ApiServer) next(c *gin.Context) {
+	a.storage.Next()
+	c.JSON(200, gin.H{
+		"success": "ok",
+	})
 }
 
 func (a *ApiServer) apiInit(c *gin.Context) {
@@ -77,22 +84,22 @@ func (a *ApiServer) symbolInfoTick(c *gin.Context) {
 	})
 }
 
-func (a *ApiServer) closeOrder(order models.Order, tick2 models.Tick) {
+func (a *ApiServer) closeOrder(order models.Order, tick models.Tick) {
 	// 计算盈利
 	var profit float64
 	var price float64
 	if order.Type == 1 { // 如果当前订单为sell
-		price = tick2.Ask // 这做空平仓
+		price = tick.Ask // 这做空平仓
 		profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
 	} else {
-		price = tick2.Bid // 做多
+		price = tick.Bid // 做多
 		profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
 	}
 
 	err := a.storage.Bb.Model(&models.Order{}).Where("id = ?", order.ID).Updates(map[string]interface{}{
 		"close_price":    price,
-		"close_time":     tick2.Timestamp,
-		"close_time_str": time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+		"close_time":     tick.Timestamp,
+		"close_time_str": time.Unix(tick.Timestamp, 0).Format("2006-01-02 15:04:05"),
 		"profit":         profit,
 		"auto":           true,
 	}).Error
@@ -120,50 +127,18 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 		}
 	}
 
-	tick2 := a.storage.GetTick2()
+	tick := a.storage.GetTick()
 
 	// 进场
 	if req.Position == 0 {
 		var orders []models.Order
 		a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).Where("close_time = 0").Find(&orders)
-		if len(orders) >= 5 {
-			tp := req.Type
-			if tp == 0 {
-				tp = 1
-			} else {
-				tp = 0
-			}
-			price := tick2.Bid
-			if tp == 0 {
-				price = tick2.Ask
-			} else {
-				price = tick2.Bid
-			}
-			err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
-				Account:       "ReverseAccount",
-				Symbol:        req.Symbol,
-				Type:          tp,
-				Volume:        req.Volume,
-				CreateTime:    tick2.Timestamp,
-				CreateTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-				Price:         price,
-				CloseTime:     0,
-				Profit:        0,
-				Tp:            req.Tp,
-				Sl:            req.Sl,
-				Comment:       req.Comment,
-				Margin:        req.Price * req.Volume * 100000 / float64(account.Lever),
-			}).Error
-			if err != nil {
-				panic(err)
-			}
-		}
 
-		price := tick2.Bid
+		price := tick.Bid
 		if req.Type == 0 {
-			price = tick2.Ask
+			price = tick.Ask
 		} else {
-			price = tick2.Bid
+			price = tick.Bid
 		}
 
 		err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
@@ -171,8 +146,8 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 			Symbol:        req.Symbol,
 			Type:          req.Type,
 			Volume:        req.Volume,
-			CreateTime:    tick2.Timestamp,
-			CreateTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+			CreateTime:    tick.Timestamp,
+			CreateTimeStr: time.Unix(tick.Timestamp, 0).Format("2006-01-02 15:04:05"),
 			Price:         price,
 			CloseTime:     0,
 			Profit:        0,
@@ -197,24 +172,17 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 		var profit float64
 		var price float64
 		if order.Type == 1 { // 如果当前订单为sell
-			price = tick2.Ask // 这做空平仓
+			price = tick.Ask // 这做空平仓
 			profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
 		} else {
-			price = tick2.Bid // 做多
+			price = tick.Bid // 做多
 			profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
-		}
-
-		if req.Price != price {
-			log.Println("req: ", req.Price)
-			log.Println("pr: ", price)
-			log.Println("-=========================")
-			os.Exit(0)
 		}
 
 		err = a.storage.Bb.Model(&models.Order{}).Where("symbol = ? and id = ?", req.Symbol, req.Position).Updates(map[string]interface{}{
 			"close_price":    price,
-			"close_time":     tick2.Timestamp,
-			"close_time_str": time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
+			"close_time":     tick.Timestamp,
+			"close_time_str": time.Unix(tick.Timestamp, 0).Format("2006-01-02 15:04:05"),
 			"profit":         profit,
 			"comment":        req.Comment,
 		}).Error

@@ -71,13 +71,19 @@ type OrderHistoryTick struct {
 }
 
 type Tick struct {
-	gorm.Model
 	Symbol    string  `json:"symbol"`
 	Timestamp int64   `json:"timestamp"`
-	TimeStr   string  `json:"time_str"`
-	Open      float64 `json:"open"`
-	High      float64 `json:"high"`
-	Low       float64 `json:"low"`
-	Close     float64 `json:"close"`
-	Volume    float64 `json:"volume"`
+	Ask       float64 `json:"ask"`
+	Bid       float64 `json:"bid"`
+}
+
+type TickItem struct {
+	TimeStr string  `json:"time_str"`
+	Time    int64   `json:"time"`
+	Open    float64 `json:"open"`
+	High    float64 `json:"high"`
+	Low     float64 `json:"low"`
+	Close   float64 `json:"close"`
+	Volume  float64 `json:"volume"`
+	Spread  int64   `json:"spread"`
 }

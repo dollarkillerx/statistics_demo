@@ -1,9 +1,15 @@
 package storage
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
+	"os"
 	"sync"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -25,6 +31,12 @@ type Storage struct {
 func (s *Storage) Next() models.Tick {
 	s.getTickChannel <- struct{}{}
 	tick := <-s.tickChannel
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.tick = tick
+
+	delRint()
 	return tick
 }
 
@@ -40,8 +52,76 @@ func (s *Storage) setTick(tick models.Tick) {
 	s.tick = tick
 }
 
-func (s *Storage) heartbeat() {
+var mu sync.Mutex
+var rint int
 
+func addRint() {
+	mu.Lock()
+	defer mu.Unlock()
+	rint++
+}
+
+func delRint() {
+	mu.Lock()
+	defer mu.Unlock()
+	rint--
+}
+
+func next() bool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if rint <= 0 {
+		return true
+	}
+
+	return false
+}
+
+func (s *Storage) heartbeat() {
+	open, err := os.Open(s.Rc.CsvPath)
+	if err != nil {
+		panic(err)
+	}
+	defer open.Close()
+
+	reader := bufio.NewReader(open)
+
+loop:
+	for {
+		select {
+		case <-s.getTickChannel:
+
+			if !next() {
+				continue
+			}
+
+			line, _, err := reader.ReadLine()
+			if err != nil {
+				break loop
+			}
+
+			lines := string(bytes.TrimSpace(line))
+			var tickItem models.TickItem
+			err = json.Unmarshal([]byte(lines), &tickItem)
+			if err == nil {
+				s.tickChannel <- models.Tick{
+					Symbol:    "EURUSD",
+					Timestamp: tickItem.Time,
+					Ask:       tickItem.Open + GenerateRandomNumber(), // 定义点差
+					Bid:       tickItem.Open,
+				}
+				addRint()
+				s.tickChannel <- models.Tick{
+					Symbol:    "EURUSD",
+					Timestamp: tickItem.Time + 10,
+					Ask:       tickItem.Close + GenerateRandomNumber(),
+					Bid:       tickItem.Close,
+				}
+				addRint()
+			}
+		}
+	}
 }
 
 func New(rc *conf.Conf) *Storage {
@@ -60,6 +140,24 @@ func New(rc *conf.Conf) *Storage {
 	go rs.heartbeat()
 
 	return rs
+}
+
+// 随机点查 70% 点差为10点
+func GenerateRandomNumber() float64 {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	// 生成0到99之间的随机数
+	randomValue := rand.Intn(100)
+
+	if randomValue < 70 {
+		return 0.0001
+	} else {
+		// 30%的时间生成20或30
+		if rand.Intn(2) == 0 {
+			return 0.0002
+		} else {
+			return 0.0003
+		}
+	}
 }
 
 func (s *Storage) GetAccount(account string) models.Account {
