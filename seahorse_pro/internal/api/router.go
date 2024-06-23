@@ -2,8 +2,6 @@ package api
 
 import (
 	"fmt"
-	"github.com/rs/xid"
-	"gorm.io/gorm"
 	"log"
 	"math"
 	"os"
@@ -11,6 +9,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/xid"
+	"gorm.io/gorm"
 	"seahorse/internal/models"
 )
 
@@ -20,7 +20,6 @@ func (a *ApiServer) RegisterRoutes() {
 		v1.POST("/init", a.apiInit)
 		v1.POST("/symbol_info", a.symbolInfo)
 		v1.POST("/symbol_info_tick", a.symbolInfoTick)
-		v1.POST("/symbol_info_tick2", a.symbolInfoTick2)
 		v1.POST("/order_send", a.orderSend)
 		v1.POST("/positions_total", a.positionsTotal)
 		v1.POST("/positions_get", a.positionsGet)
@@ -39,19 +38,6 @@ func (a *ApiServer) apiInit(c *gin.Context) {
 
 	err := a.storage.Bb.Model(&models.Account{}).Create(&models.Account{
 		Account:         req.Account,
-		InitialAmount:   req.Balance,
-		Balance:         req.Balance,
-		Lever:           req.Lever,
-		LargestPosition: 0,
-		LargestLoss:     0,
-		LargestProfit:   0,
-	}).Error
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.storage.Bb.Model(&models.Account{}).Create(&models.Account{
-		Account:         "ReverseAccount",
 		InitialAmount:   req.Balance,
 		Balance:         req.Balance,
 		Lever:           req.Lever,
@@ -147,21 +133,6 @@ func (a *ApiServer) closeOrder(order models.Order, tick2 models.Tick) {
 	a.storage.Bb.Model(&models.Account{}).Where("account = ?", order.Account).UpdateColumn("balance", gorm.Expr("balance + ?", profit))
 }
 
-func (a *ApiServer) symbolInfoTick2(c *gin.Context) {
-	var req models.ReqSymbolInfoTick
-	if err := c.ShouldBindJSON(&req); err != nil {
-		panic(err)
-	}
-
-	tick := a.storage.GetTick2()
-	c.JSON(200, models.RespSymbolInfoTick{
-		Ask:       tick.Ask,
-		Bid:       tick.Bid,
-		Timestamp: tick.Timestamp,
-		Time:      tick.Timestamp,
-	})
-}
-
 func (a *ApiServer) orderSend(c *gin.Context) {
 	var req models.ReqOrderSend
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -185,38 +156,6 @@ func (a *ApiServer) orderSend(c *gin.Context) {
 	if req.Position == 0 {
 		var orders []models.Order
 		a.storage.Bb.Model(&models.Order{}).Where("account = ?", req.Account).Where("close_time = 0").Find(&orders)
-		//{
-		//	tp := req.Type
-		//	if tp == 0 {
-		//		tp = 1
-		//	} else {
-		//		tp = 0
-		//	}
-		//	price := tick2.Bid
-		//	if tp == 0 {
-		//		price = tick2.Ask
-		//	} else {
-		//		price = tick2.Bid
-		//	}
-		//	err := a.storage.Bb.Model(&models.Order{}).Create(&models.Order{
-		//		Account:       "ReverseAccount",
-		//		Symbol:        req.Symbol,
-		//		Type:          tp,
-		//		Volume:        req.Volume,
-		//		CreateTime:    tick2.Timestamp,
-		//		CreateTimeStr: time.Unix(tick2.Timestamp, 0).Format("2006-01-02 15:04:05"),
-		//		Price:         price,
-		//		CloseTime:     0,
-		//		Profit:        0,
-		//		Tp:            req.Tp,
-		//		Sl:            req.Sl,
-		//		Comment:       req.Comment,
-		//		Margin:        req.Price * req.Volume * 100000 / float64(account.Lever),
-		//	}).Error
-		//	if err != nil {
-		//		panic(err)
-		//	}
-		//}
 		if len(orders) >= 5 {
 			tp := req.Type
 			if tp == 0 {
