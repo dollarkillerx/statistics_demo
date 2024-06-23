@@ -53,7 +53,7 @@ func TestDataParse(t *testing.T) {
 	defer file.Close()
 
 	for _, v := range datas {
-		file.Write([]byte(fmt.Sprintf("%s\r", v.ToJSON())))
+		file.Write([]byte(fmt.Sprintf("%s\n", v.ToJSON())))
 	}
 
 }

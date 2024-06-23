@@ -1,6 +1,6 @@
 {
   "address": "127.0.0.1:8475",
-  "csv_path": "Exness_EURUSD_2024.csv",
+  "csv_path": "eurusd.csv",
   "symbol": "EURUSD",
   "db": {
     "host": "192.168.78.129",

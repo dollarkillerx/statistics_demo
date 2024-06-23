@@ -33,9 +33,7 @@ func (s *Storage) Next() models.Tick {
 	s.getTickChannel <- struct{}{}
 	tick := <-s.tickChannel
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.tick = tick
+	s.setTick(tick)
 
 	delRint()
 	return tick
@@ -80,6 +78,7 @@ func next() bool {
 }
 
 func (s *Storage) heartbeat() {
+	fmt.Println("heartbeat...........................")
 	open, err := os.Open(s.Rc.CsvPath)
 	if err != nil {
 		panic(err)
@@ -92,7 +91,6 @@ loop:
 	for {
 		select {
 		case <-s.getTickChannel:
-
 			if !next() {
 				continue
 			}
@@ -120,6 +118,8 @@ loop:
 					Bid:       tickItem.Close,
 				}
 				addRint()
+			} else {
+				panic(lines)
 			}
 		}
 	}
@@ -134,9 +134,9 @@ func New(rc *conf.Conf) *Storage {
 		panic(err)
 	}
 
-	db.AutoMigrate(&models.Order{}, &models.Account{}, &models.OrderHistory{}, &models.OrderHistoryTick{}, &models.AccountLog{})
+	db.AutoMigrate(&models.Order{}, &models.Account{}, &models.AccountLog{})
 
-	rs := &Storage{Bb: db, getTickChannel: make(chan struct{}), tickChannel: make(chan models.Tick), Rc: rc}
+	rs := &Storage{Bb: db, getTickChannel: make(chan struct{}), tickChannel: make(chan models.Tick, 200), Rc: rc}
 
 	go rs.heartbeat()
 

@@ -85,11 +85,6 @@ class Seahorse:
         # buy 市价
     def buy(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
         try:
-            if symbol == '':
-                print("what fuck")
-                exit(0)
-            # if deviation == 0:
-            #     deviation = self.deviation
             point = 0.00001
             price = self.symbol_info_tick(symbol).ask
             request = {
@@ -222,7 +217,6 @@ class Seahorse:
         # comment
         positions = ()
         if symbol != "":
-            symbol = symbol
             positions = self._positions_get(symbol=symbol)
             if positions is None:
                 raise ValueError("error: {} {}".format("error", symbol))
@@ -236,6 +230,28 @@ class Seahorse:
         filtered_positions = [pos for pos in positions if pos.magic == magic]
 
         return filtered_positions
+
+    def next(self):
+        url = "http://{}/api/v1/next".format(self.address)
+        data = {
+            "account": self.account,
+        }
+
+        # 将数据编码为 JSON
+        json_data = json.dumps(data).encode('utf-8')
+
+        # 创建请求对象
+        req = urllib.request.Request(url, data=json_data, headers={'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req) as response:
+                bytes = response.read()
+                # 将字节数据解码为字符串
+                response_data = bytes.decode('utf-8')
+                # 将响应字符串转换为 JSON
+                response_json = json.loads(response_data)
+                return response_json
+        except urllib.error.URLError as e:
+            raise ValueError(e)
 
     def _orderSend(self, position: int, symbol: str, volume: float, price: float, typ: int):
         url = "http://{}/api/v1/order_send".format(self.address)
@@ -267,8 +283,6 @@ class Seahorse:
     # 关闭订单
     def close(self, orderId, deviation=0):
         try:
-            # if deviation == 0:
-            #     deviation = self.deviation
             positions = self._positions_get(ticket=orderId)
             print('------------------------------------')
             print(positions)
