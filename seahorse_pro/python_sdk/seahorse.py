@@ -91,8 +91,7 @@ class Seahorse:
             # if deviation == 0:
             #     deviation = self.deviation
             point = 0.00001
-            print(self.symbol_info_tick2(symbol))
-            price = self.symbol_info_tick2(symbol).ask
+            price = self.symbol_info_tick(symbol).ask
             request = {
                 "symbol": symbol,
                 "volume": volume,
@@ -113,7 +112,7 @@ class Seahorse:
     def sell(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
         try:
             point = 0.00001
-            price = self.symbol_info_tick2(symbol).bid
+            price = self.symbol_info_tick(symbol).bid
             request = {
                 "symbol": symbol,
                 "volume": volume,
@@ -280,7 +279,7 @@ class Seahorse:
             position = positions[0]
 
             point = 0.00001
-            symbol_info_tick = self.symbol_info_tick2(position.symbol)
+            symbol_info_tick = self.symbol_info_tick(position.symbol)
 
             bid_price = symbol_info_tick.bid
             ask_price = symbol_info_tick.ask
@@ -303,7 +302,7 @@ class Seahorse:
 
     # 关闭所有订单
     def close_all(self, magic=0,comment = ''):
-        positions = self.positions_get()
+        positions = self.positions_get(magic=magic)
         for position in positions:
             self.close(position.ticket)
 

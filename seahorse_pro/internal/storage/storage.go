@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"os"
@@ -231,6 +232,91 @@ func (s *Storage) GetAccount(account string) models.Account {
 	}).Error
 
 	return accountInfo
+}
+
+func (s *Storage) JxGd() {
+	var orders []models.Order
+	err := s.Bb.Model(&models.Order{}).
+		Where("close_time = 0").Find(&orders).Error
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	if len(orders) == 0 {
+		return
+	}
+
+	var jxOrder []models.Order
+	for _, order := range orders {
+		if order.Sl == 0 && order.Tp == 0 {
+			continue
+		}
+
+		if order.Sl != 0 {
+			jxOrder = append(jxOrder, order)
+		}
+
+		if order.Tp != 0 {
+			jxOrder = append(jxOrder, order)
+		}
+	}
+
+	if len(jxOrder) == 0 {
+		return
+	}
+
+	for i, v := range jxOrder {
+		if v.Sl != 0 {
+			if v.Type == 0 {
+				if s.GetTick().Bid <= v.Sl {
+					s.closeOrder(jxOrder[i])
+				}
+			} else {
+				if s.GetTick().Ask >= v.Sl {
+					s.closeOrder(jxOrder[i])
+				}
+			}
+		}
+
+		if v.Tp != 0 {
+			if v.Type == 0 {
+				if s.GetTick().Bid >= v.Tp {
+					s.closeOrder(jxOrder[i])
+				}
+			} else {
+				if s.GetTick().Ask <= v.Tp {
+					s.closeOrder(jxOrder[i])
+				}
+			}
+		}
+	}
+}
+
+func (s *Storage) closeOrder(order models.Order) {
+	tick := s.GetTick()
+
+	var price float64
+	var profit float64
+	if order.Type == 1 { // 如果当前订单为sell
+		price = tick.Ask // 这做空平仓
+		profit = math.Round(((order.Price-price)*order.Volume*100000)*100) / 100
+	} else {
+		price = tick.Bid // 做多
+		profit = math.Round(((price-order.Price)*order.Volume*100000)*100) / 100
+	}
+
+	err := s.Bb.Model(&models.Order{}).Where("id = ?", order.ID).Updates(map[string]interface{}{
+		"close_price":    price,
+		"close_time":     tick.Timestamp,
+		"close_time_str": time.Unix(tick.Timestamp, 0).Format("2006-01-02 15:04:05"),
+		"profit":         profit,
+		"comment":        "tp/sl",
+		"auto":           true,
+	}).Error
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ProfitAndLossCalculation 计算盈亏

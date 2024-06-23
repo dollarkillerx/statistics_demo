@@ -30,6 +30,9 @@ func (a *ApiServer) RegisterRoutes() {
 
 func (a *ApiServer) next(c *gin.Context) {
 	a.storage.Next()
+	// 计算挂单
+	a.storage.JxGd()
+
 	c.JSON(200, gin.H{
 		"success": "ok",
 	})
