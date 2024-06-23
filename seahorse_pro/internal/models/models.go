@@ -2,14 +2,6 @@ package models
 
 import "gorm.io/gorm"
 
-type Tick struct {
-	Symbol    string  `json:"symbol"`
-	Timestamp int64   `json:"timestamp"`
-	Ask       float64 `json:"ask"`
-	Bid       float64 `json:"bid"`
-	Over      bool    `json:"over"`
-}
-
 type Order struct {
 	gorm.Model
 	Symbol        string  `json:"symbol"` // 货币
@@ -76,4 +68,16 @@ type OrderHistoryTick struct {
 	Position int     `json:"position"` // 仓位数量
 	Volume   float64 `json:"volume"`   // 交易量
 	Comment  string  `json:"comment"`  // 备注
+}
+
+type Tick struct {
+	gorm.Model
+	Symbol    string  `json:"symbol"`
+	Timestamp int64   `json:"timestamp"`
+	TimeStr   string  `json:"time_str"`
+	Open      float64 `json:"open"`
+	High      float64 `json:"high"`
+	Low       float64 `json:"low"`
+	Close     float64 `json:"close"`
+	Volume    float64 `json:"volume"`
 }

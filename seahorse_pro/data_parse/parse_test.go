@@ -15,7 +15,7 @@ import (
 
 func TestDataParse(t *testing.T) {
 	input := "EURUSDm_M1_202403180821_202405312058.csv"
-	output := "eurusd_m1.csv"
+	output := "eurusd.csv"
 
 	open, err := os.Open(input)
 	if err != nil {
@@ -46,16 +46,14 @@ func TestDataParse(t *testing.T) {
 		}
 	}
 
-	create, err := os.Create(output)
+	file, err := os.Create(output)
 	if err != nil {
 		panic(err)
 	}
-	writer := csv.NewWriter(create)
-	for _, data := range datas {
-		writer.Write([]string{
-			data.TimeStr,
-			data.Time,
-		})
+	defer file.Close()
+
+	for _, v := range datas {
+		file.Write([]byte(fmt.Sprintf("%s\r", v.ToJSON())))
 	}
 
 }
@@ -69,6 +67,11 @@ type Data struct {
 	Close   float64 `json:"close"`
 	Volume  float64 `json:"volume"`
 	Spread  int64   `json:"spread"`
+}
+
+func (d *Data) ToJSON() string {
+	marshal, _ := json.Marshal(d)
+	return string(marshal)
 }
 
 func (d *Data) Print() {

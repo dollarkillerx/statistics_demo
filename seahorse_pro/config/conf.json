@@ -3,10 +3,10 @@
   "csv_path": "Exness_EURUSD_2024.csv",
   "symbol": "EURUSD",
   "db": {
-    "host": "127.0.0.1",
+    "host": "192.168.78.129",
     "port": 5432,
     "user": "root",
     "password": "root",
-    "db_name": "eye_truth_test3"
+    "db_name": "r_test"
   }
 }

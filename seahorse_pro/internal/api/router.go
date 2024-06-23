@@ -69,36 +69,6 @@ func (a *ApiServer) symbolInfoTick(c *gin.Context) {
 
 	tick := a.storage.GetTick()
 
-	// 统计tp sl
-	var orders []models.Order
-	a.storage.Bb.Model(&models.Order{}).
-		Where("close_time = 0").Find(&orders)
-	for _, order := range orders {
-		if order.Tp == 0 && order.Sl == 0 {
-			continue
-		}
-		// buy
-		if order.Type == 0 {
-			if order.Tp != 0 && tick.Bid >= order.Tp {
-				a.closeOrder(order, tick)
-			}
-
-			if order.Sl != 0 && tick.Bid <= order.Sl {
-				a.closeOrder(order, tick)
-			}
-		}
-		// sell
-		if order.Type == 1 {
-			if order.Tp != 0 && tick.Ask <= order.Tp {
-				a.closeOrder(order, tick)
-			}
-
-			if order.Sl != 0 && tick.Ask >= order.Sl {
-				a.closeOrder(order, tick)
-			}
-		}
-	}
-
 	c.JSON(200, models.RespSymbolInfoTick{
 		Ask:       tick.Ask,
 		Bid:       tick.Bid,
