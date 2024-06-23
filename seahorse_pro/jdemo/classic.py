@@ -59,6 +59,8 @@ class Classic:
                 buyFloat += position.profit
             else:
                 selFloat += position.profit
+        print("============================")
+        print("当前买单： {} 当前卖单： {}  是否做多： {}".format(buyFloat, selFloat, buyFloat > selFloat))
         if buyFloat > selFloat:
             return "buy"
         return "sell"
