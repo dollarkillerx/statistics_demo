@@ -82,30 +82,6 @@ class Seahorse:
                 "error": e
             }
 
-    def symbol_info_tick2(self, symbol):
-        url = "http://{}/api/v1/symbol_info_tick2".format(self.address)
-        data = {
-            "symbol": symbol,
-        }
-
-        # 将数据编码为 JSON
-        json_data = json.dumps(data).encode('utf-8')
-
-        # 创建请求对象
-        req = urllib.request.Request(url, data=json_data, headers={'Content-Type': 'application/json'})
-        try:
-            with urllib.request.urlopen(req) as response:
-                bytes = response.read()
-                # 将字节数据解码为字符串
-                response_data = bytes.decode('utf-8')
-                # 将响应字符串转换为 JSON
-                response_json = json.loads(response_data)
-                return SimpleNamespace(**response_json)
-        except urllib.error.URLError as e:
-            return {
-                "error": e
-            }
-
         # buy 市价
     def buy(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
         try:
@@ -327,27 +303,9 @@ class Seahorse:
 
     # 关闭所有订单
     def close_all(self, magic=0,comment = ''):
-        url = "http://{}/api/v1/close_all".format(self.address)
-        data = {
-            "account": self.account,
-            "comment":  comment,
-        }
-
-        # 将数据编码为 JSON
-        json_data = json.dumps(data).encode('utf-8')
-
-        # 创建请求对象
-        req = urllib.request.Request(url, data=json_data, headers={'Content-Type': 'application/json'})
-        try:
-            with urllib.request.urlopen(req) as response:
-                bytes = response.read()
-                # 将字节数据解码为字符串
-                response_data = bytes.decode('utf-8')
-                # 将响应字符串转换为 JSON
-                response_json = json.loads(response_data)
-                return response_json
-        except urllib.error.URLError as e:
-            raise ValueError(e)
+        positions = self.positions_get()
+        for position in positions:
+            self.close(position.ticket)
 
     def last_error(self):
         return ""
