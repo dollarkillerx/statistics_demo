@@ -161,7 +161,7 @@ class Encryption:
             buy_last_order = self.mt5.last_position(orderType="buy")
             if buy_last_order is not None:
                 positions = self.mt5.positions_get_by_type(orderType="buy")
-                if positions < self.max_order:
+                if len(positions) < self.max_order:
                     price = symbol_info_tick.ask
                     if abs(Decimal(
                             str((Decimal(str(buy_last_order.price_open)) - Decimal(
@@ -175,7 +175,7 @@ class Encryption:
             sell_last_order = self.mt5.last_position(orderType="sell")
             if sell_last_order is not None:
                 positions = self.mt5.positions_get_by_type(orderType="sell")
-                if positions < self.max_order:
+                if len(positions) < self.max_order:
                     price = symbol_info_tick.bid
                     if abs(Decimal(
                             str((Decimal(str(sell_last_order.price_open)) - Decimal(
