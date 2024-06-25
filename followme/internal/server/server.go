@@ -20,7 +20,7 @@ func New() *Server {
 
 func (s *Server) Run() error {
 	//s.app.Use()
-
+	gin.SetMode(gin.ReleaseMode)
 	s.router()
 	return s.app.Run(conf.Config.Address)
 }

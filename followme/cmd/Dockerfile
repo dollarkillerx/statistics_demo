@@ -32,7 +32,7 @@ COPY --from=builder /app/main .
 RUN ls -la
 
 # Expose port 8080 to the outside world
-# EXPOSE 8080
+EXPOSE 9981
 
 # Command to run the executable
 CMD ["./main"]

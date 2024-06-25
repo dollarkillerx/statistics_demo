@@ -1,7 +1,7 @@
 package conf
 
 var Config = config{
-	Address: "localhost:9871",
+	Address: "0.0.0.0:9981",
 	Header:  "FollowMe",
 }
 
