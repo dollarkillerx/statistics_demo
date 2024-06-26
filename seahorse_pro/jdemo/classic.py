@@ -92,9 +92,9 @@ class Classic:
                 # 随机下单
                 self.direction = self.random_direction()
                 if self.direction == "buy":
-                    self.mt5.buy(self.symbol, self.initial_volume, tp=10)
+                    self.mt5.buy(self.symbol, self.initial_volume, tp=6)
                 else:
-                    self.mt5.sell(self.symbol, self.initial_volume, tp=10)
+                    self.mt5.sell(self.symbol, self.initial_volume, tp=6)
                 print("----------------new-----------------")
                 # time.sleep(100 / 1000)
                 continue
