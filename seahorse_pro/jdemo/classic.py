@@ -1,12 +1,12 @@
 import time
 import random
-import seahorse as utils
+import utils
 from decimal import Decimal, getcontext
 getcontext().prec = 28
 
 class Classic:
     direction = "buy" # 方向
-    magic = 0 # 魔术手666666
+    magic = 6666 # 魔术手666666
     deviation = 20 # 滑点
     currency_suffix = "c"  # 货币后缀
     initial_volume = 0.01  # 初始volume
@@ -30,8 +30,7 @@ class Classic:
         self.time_interval = time_interval
 
     def init(self):
-        self.mt5 = utils.Seahorse("127.0.0.1:8475", "my_test",5000,2000)
-        self.mt5.init_account()
+        self.mt5=utils.MT5utils(path="C:\\Users\\Administrator\\Desktop\\MT3\\terminal64.exe")
         self.mt5.set_currency_suffix(self.currency_suffix)
         self.mt5.set_magic(self.magic)
         self.mt5.set_def_deviation(self.deviation)
@@ -39,9 +38,9 @@ class Classic:
     # 出场
     def prominence(self):
         profit = self.mt5.profit(magic=self.magic)
-        if profit < -20:
+        if profit > 25:
             self.mt5.close_all()
-        if profit > 0:
+        if profit < 0:
             positions = self.mt5.positions_get()
             to = 0
             for i in positions:
@@ -93,9 +92,9 @@ class Classic:
                 # 随机下单
                 self.direction = self.random_direction()
                 if self.direction == "buy":
-                    self.mt5.buy(self.symbol, self.initial_volume, sl=10)
+                    self.mt5.buy(self.symbol, self.initial_volume, tp=10)
                 else:
-                    self.mt5.sell(self.symbol, self.initial_volume, sl=10)
+                    self.mt5.sell(self.symbol, self.initial_volume, tp=10)
                 print("----------------new-----------------")
                 # time.sleep(100 / 1000)
                 continue
@@ -106,16 +105,16 @@ class Classic:
                     str((Decimal(str(last_position.price_open)) - Decimal(str(price))))) * 10000) > self.interval:
                         if abs(last_position.time_update - symbol_info_tick.time) > self.time_interval * 60:
                             profit = self.mt5.profit()
-                            xm = 3
+                            xm = -3
                             to = self.mt5.positions_total().total
                             if to > 4:
-                                xm = 15
+                                xm = -5
                             elif to == 1:
-                                xm = 1
+                                xm = -1
 
-                            if profit > xm:
+                            if profit < xm:
                                 if self.ok(price):
-                                    if self.next_direction() != "buy":
+                                    if self.next_direction() == "buy":
                                         if round(last_position.volume * 1.5,
                                                            2) == last_position.volume:
                                             self.mt5.buy(self.symbol,
