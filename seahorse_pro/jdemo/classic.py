@@ -80,7 +80,7 @@ class Classic:
 
     def run(self):
         while True:
-            self.mt5.next() # 获取tick
+            # self.mt5.next() # 获取tick
             symbol_info_tick = self.mt5.symbol_info_tick(symbol=self.symbol)
 
             # 出场判断
