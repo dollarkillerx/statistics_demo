@@ -106,7 +106,7 @@ class Classic:
                         if abs(last_position.time_update - symbol_info_tick.time) > self.time_interval * 60:
                             profit = self.mt5.profit()
                             xm = -3
-                            to = self.mt5.positions_total().total
+                            to = self.mt5.positions_total()
                             if to > 4:
                                 xm = -5
                             elif to == 1:
