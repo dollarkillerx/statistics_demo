@@ -137,7 +137,7 @@ class Classic:
 
 
 
-            # time.sleep(100 / 1000)
+            time.sleep(100 / 1000)
 
 
 
