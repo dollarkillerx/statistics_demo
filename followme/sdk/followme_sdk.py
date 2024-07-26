@@ -118,18 +118,18 @@ class FollowMeSDK:
                             print(removeOrderMap)
 
 
-                    if len(orders) == 0:
+                    if len(orders) == 0 and len(positions) != 0:
                         self.mt5.close_all(magic=self.mt5.magic)
 
-                    if len(orders) == 1:
-                        continue
+                    # if len(orders) == 1:
+                    #     continue
 
                     for position in positions:
                         dictMap[position.comment] = 0
 
                     for index, order in enumerate(orders):
-                        if index == 0:
-                            continue
+                        # if index == 0:
+                        #     continue
                         if order.id not in dictMap:
                             # 獲取當前時間
                             symbol = ""

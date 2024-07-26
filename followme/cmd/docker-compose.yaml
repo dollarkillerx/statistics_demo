@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  followme:
+    image: harbor.dollarkiller.com/library/followme:1.0.0
+    container_name: followme
+    restart: always
+    ports:
+      - "9981:9981"
+#    volumes:
+#      - ./configs/:/app/configs

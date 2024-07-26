@@ -566,8 +566,8 @@ if showTradeStats
 up = startLongTrade ? low : na
 donw = startShortTrade ? high : na
 
-alertMessageLong = '{"ticker":"'+ syminfo.tickerid +'", "action": "buy","price":"' + str.tostring(close) + '","time":' + str.tostring(time) + '}'
-alertMessageSell = '{"ticker":"'+ syminfo.tickerid +'", "action": "sell","price":"' + str.tostring(close) + '","time":' + str.tostring(time) + '}'
+alertMessageLong = '{"ticker":"'+ syminfo.ticker +'", "action": "buy","price":"' + str.tostring(close) + '","time":' + str.tostring(time) + '}'
+alertMessageSell = '{"ticker":"'+ syminfo.ticker +'", "action": "sell","price":"' + str.tostring(close) + '","time":' + str.tostring(time) + '}'
 
 if up
     alert(alertMessageLong, alert.freq_once_per_bar)

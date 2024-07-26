@@ -7,6 +7,6 @@
     "port": 5432,
     "user": "root",
     "password": "root",
-    "db_name": "r_test"
+    "db_name": "r_test1"
   }
 }
