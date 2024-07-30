@@ -7,6 +7,8 @@
   - 持仓数据
 - 冷数据 pgsql
   - 历史数据
+- taosdata  （pgsql先代替）
+  - 存储实时持仓数据打点 
 
 第一版 所有数据都会存储在pgsql 中
 
@@ -104,5 +106,7 @@ type ErrorPayload struct {
 ### 表设计
 
 `new_system/backend/pkg/models`
+
+
 
 
