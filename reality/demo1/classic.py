@@ -142,8 +142,12 @@ class Classic:
                                 self.mt5.buy(self.symbol,
                                              round(last_position.volume + self.increase_multiple,
                                                    2))
+                random_number = random.randint(1, 100)
+                print(random_number)
             except(Exception) as e:
+                print("---------------------------eeeeeeeeeeeeeeeee-------------------------")
                 print(e)
+                print("---------------------------eeeeeeeeeeeeeeeee-------------------------")
             finally:
                 time.sleep(100 / 1000)
 
