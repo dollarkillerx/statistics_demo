@@ -1,0 +1,26 @@
+[ServiceConfiguration]
+Port="8181"
+Debug=true
+
+[PostgresConfiguration]
+Host="127.0.0.1"
+Port=5532
+User="root"
+Password="L8onP2L3"
+DBName="trade"
+
+[LoggerConfiguration]
+Filename="logs/real.log"
+Level="debug"
+
+[OpenTelemetryConfiguration]
+[OpenTelemetryConfiguration.Traces]
+HTTPEndpoint = "192.168.40.238:5081"
+Path="/api/default/traces"
+Authorization = "Basic Z29vZ2xlQGdvb2dsZS5jb206OFozWGJBQ0xBMXJ0Nm9nWQ=="
+
+[OpenTelemetryConfiguration.Logs]
+HTTPEndpoint = "http://192.168.40.238:5081/api/default/real/_json"
+User="google@google.com"
+Password="8Z3XbACLA1rt6ogY"
+File="logs/real.log"
