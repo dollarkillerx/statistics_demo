@@ -5,7 +5,8 @@ import "github.com/dollarkillerx/backend/pkg/enum"
 // History 历史持仓
 type History struct {
 	BaseModel
-	OrderID        string         `json:"order_id" gorm:"column:order_id;type:varchar(255);not null"`      // 持仓ID
+	ClientID       string         `json:"client_id" gorm:"column:client_id;type:varchar(255);not null"`    // company.account: exness.10086
+	OrderID        int64          `json:"order_id" gorm:"column:order_id;type:bigint;not null"`            // 持仓ID
 	Direction      enum.Direction `json:"direction" gorm:"column:direction;type:varchar(255);not null"`    // 方向
 	Symbol         string         `json:"symbol" gorm:"column:symbol;type:varchar(50);not null"`           // 币种
 	Magic          int64          `json:"magic" gorm:"column:magic;type:bigint;not null"`                  // 魔术手
@@ -25,4 +26,14 @@ type History struct {
 
 func (History) TableName() string {
 	return "history"
+}
+
+func GetHistoryByID(clientID string, orderID int64, positions []History) *History {
+	for idx, val := range positions {
+		if val.OrderID == orderID && clientID == val.ClientID {
+			return &positions[idx]
+		}
+	}
+
+	return nil
 }

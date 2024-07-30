@@ -2,6 +2,8 @@
 
 ### 存储设计
 
+可观察性 dragonflydb => pgsql
+
 - 热数据 dragonflydb
   - 账户数据
   - 持仓数据

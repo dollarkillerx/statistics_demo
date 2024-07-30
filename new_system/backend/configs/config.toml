@@ -9,6 +9,10 @@ User="root"
 Password="L8onP2L3"
 DBName="trade"
 
+[RedisConfiguration]
+Addr="127.0.0.1:6379"
+Db=1
+
 [LoggerConfiguration]
 Filename="logs/real.log"
 Level="debug"

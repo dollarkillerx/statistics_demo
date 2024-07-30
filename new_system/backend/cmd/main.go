@@ -64,12 +64,17 @@ func main() {
 		log.Error().Msg("Failed to connect to postgres")
 		panic(err)
 	}
+	redisClient, err := client.RedisClient(appConfig.RedisConfiguration)
+	if err != nil {
+		log.Error().Msg("Failed to connect to redisClient")
+		panic(err)
+	}
 
-	storage := storage.NewStorage(postgresClient)
+	st := storage.NewStorage(postgresClient, redisClient)
 	log.Info().Msg("Storage initialized")
 
 	// 启动服务
-	ser := server.NewServer(storage, appConfig)
+	ser := server.NewServer(st, appConfig)
 	if err := ser.Run(); err != nil {
 		log.Error().Msgf("Failed to start server %s", err)
 	}

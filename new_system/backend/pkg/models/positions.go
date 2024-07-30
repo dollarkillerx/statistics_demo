@@ -5,7 +5,8 @@ import "github.com/dollarkillerx/backend/pkg/enum"
 // Positions 持仓
 type Positions struct {
 	BaseModel
-	OrderID        string         `json:"order_id" gorm:"column:order_id;type:varchar(255);not null"`      // 持仓ID
+	ClientID       string         `json:"client_id" gorm:"column:client_id;type:varchar(255);not null"`    // company.account: exness.10086
+	OrderID        int64          `json:"order_id" gorm:"column:order_id;type:type:bigint;not null"`       // 持仓ID
 	Direction      enum.Direction `json:"direction" gorm:"column:direction;type:varchar(255);not null"`    // 方向
 	Symbol         string         `json:"symbol" gorm:"column:symbol;type:varchar(50);not null"`           // 币种
 	Magic          int64          `json:"magic" gorm:"column:magic;type:bigint;not null"`                  // 魔术手
@@ -26,4 +27,14 @@ type Positions struct {
 // TableName 表名
 func (Positions) TableName() string {
 	return "positions"
+}
+
+func GetPositionsByID(clientID string, orderID int64, positions []Positions) *Positions {
+	for idx, val := range positions {
+		if val.OrderID == orderID && clientID == val.ClientID {
+			return &positions[idx]
+		}
+	}
+
+	return nil
 }

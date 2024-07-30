@@ -7,6 +7,12 @@ import (
 
 func (a *ApiServer) Router() {
 	a.app.GET("/health", a.HealthCheck)
+
+	ea := a.app.Group("/ea")
+	{
+		// broadcast 广播
+		ea.POST("/broadcast", a.broadcast)
+	}
 }
 
 func (a *ApiServer) HealthCheck(ctx *gin.Context) {
