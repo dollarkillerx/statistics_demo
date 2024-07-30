@@ -38,8 +38,9 @@ func (s *Storage) UpdatePositions(clientID string, positions []models.Positions)
 	s.cache.SetEx(context.TODO(), key, string(marshal), time.Hour*24*30)
 }
 
-func (s *Storage) GetPositionsByID(id string) []models.Positions {
-	result, err := s.cache.Get(context.TODO(), id).Result()
+func (s *Storage) GetPositionsByID(clientID string) []models.Positions {
+	var key = CachePositions.GetKey(clientID)
+	result, err := s.cache.Get(context.TODO(), key).Result()
 	if err != nil {
 		return nil
 	}

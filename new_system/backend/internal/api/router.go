@@ -12,6 +12,7 @@ func (a *ApiServer) Router() {
 	{
 		// broadcast 广播
 		ea.POST("/broadcast", a.broadcast)
+		// subscription 订阅
 		ea.POST("/subscription", a.subscription)
 	}
 }
