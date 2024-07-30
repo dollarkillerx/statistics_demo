@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dollarkillerx/backend/pkg/models"
 	"gorm.io/gorm"
 )
 
@@ -10,7 +11,15 @@ type Storage struct {
 
 func NewStorage(db *gorm.DB) *Storage {
 
-	//db.AutoMigrate()
+	db.AutoMigrate(
+		&models.Account{},
+		&models.Error{},
+		&models.History{},
+		&models.Positions{},
+		&models.Statistics{},
+		&models.Strategy{},
+		&models.TimeSeriesPosition{},
+	)
 
 	return &Storage{db: db}
 }
