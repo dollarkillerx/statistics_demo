@@ -1,6 +1,7 @@
 package resp
 
 import (
+	"github.com/dollarkillerx/backend/internal/storage"
 	"github.com/dollarkillerx/backend/pkg/enum"
 	"github.com/dollarkillerx/backend/pkg/models"
 	"github.com/rs/xid"
@@ -64,19 +65,12 @@ type Positions struct {
 	ClosingTimeSystem int64  `json:"closing_time_system"` // 平仓时间系统
 }
 
-func (b *BroadcastPayload) ToPositions(clientID string, oldPositions []models.Positions) []models.Positions {
+func (b *BroadcastPayload) ToPositions(clientID string, storage *storage.Storage) []models.Positions {
 	var result []models.Positions
 
 	for _, v := range b.Positions {
 		id := xid.New().String()
-		var openingTimeSystem int64
-		pos := models.GetPositionsByID(clientID, v.OrderID, oldPositions)
-		if pos != nil {
-			id = pos.ID
-			openingTimeSystem = pos.OpeningTimeSystem
-		} else {
-			openingTimeSystem = time.Now().Unix()
-		}
+		openingTimeSystem := storage.GenTime(clientID + "openingTimeSystem")
 		result = append(result, models.Positions{
 			BaseModel: models.BaseModel{
 				ID:        id,
@@ -105,20 +99,14 @@ func (b *BroadcastPayload) ToPositions(clientID string, oldPositions []models.Po
 	return result
 }
 
-func (b *BroadcastPayload) ToHistory(clientID string, oldHistory []models.History) []models.History {
+func (b *BroadcastPayload) ToHistory(clientID string, storage *storage.Storage) []models.History {
 	var result []models.History
 
 	for _, v := range b.Positions {
 		id := xid.New().String()
-		var openingTimeSystem int64
-		pos := models.GetPositionsByID(clientID, v.OrderID, oldPositions)
-		if pos != nil {
-			id = pos.ID
-			openingTimeSystem = pos.OpeningTimeSystem
-		} else {
-			openingTimeSystem = time.Now().Unix()
-		}
-		result = append(result, models.Positions{
+		var openingTimeSystem = storage.GenTime(clientID + "openingTimeSystem")
+		var closingTimeSystem = storage.GenTime(clientID + "closingTimeSystem")
+		result = append(result, models.History{
 			BaseModel: models.BaseModel{
 				ID:        id,
 				CreatedAt: time.Now(),
@@ -139,7 +127,7 @@ func (b *BroadcastPayload) ToHistory(clientID string, oldHistory []models.Histor
 			ClosingTime:       v.ClosingTime,
 			CommonInternal:    "",
 			OpeningTimeSystem: openingTimeSystem,
-			ClosingTimeSystem: 0,
+			ClosingTimeSystem: closingTimeSystem,
 		})
 	}
 

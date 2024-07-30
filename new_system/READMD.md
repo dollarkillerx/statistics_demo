@@ -62,18 +62,6 @@ type Positions struct {
 
 request: 
 ``` 
-type Subscription struct {
-	SubscriptionClientID string `json:"subscription_client_id"` // 订阅账户 
-
-	ClientID  string      `json:"client_id"` // company.account: exness.10086
-	Account   Account     `json:"account"`   // 账户信息
-	Positions []Positions `json:"positions"` // 持仓
-	History   []Positions `json:"history"`   // 历史订单
-}
-```
-
-response: 
-``` 
 type SubscriptionPayload struct {
 	SubscriptionClientID string `json:"subscription_client_id"` // 订阅账户
 	StrategyCode         string `json:"strategy_code"`          // 订阅策略code
@@ -84,7 +72,11 @@ type SubscriptionPayload struct {
 	Positions []Positions `json:"positions"` // 持仓
 	History   []Positions `json:"history"`   // 历史订单
 }
+```
 
+response: 
+
+``` 
 type SubscriptionResponse struct {
 	ClientID string `json:"client_id"` // company.account: exness.10086   推送id
 

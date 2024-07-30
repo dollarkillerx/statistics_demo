@@ -6,8 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (a *ApiServer) broadcast(ctx *gin.Context) {
-	var input resp.BroadcastPayload
+func (a *ApiServer) subscription(ctx *gin.Context) {
+	var input resp.SubscriptionPayload
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		resp.Return(ctx, 400, err.Error(), nil)
 		return
@@ -26,5 +26,8 @@ func (a *ApiServer) broadcast(ctx *gin.Context) {
 	history := input.ToHistory(input.ClientID, a.storage)
 	a.storage.UpdateHistory(input.ClientID, history)
 
-	resp.Return(ctx, 200, "ok", nil)
+	// StrategyCode 内置
+	// Reverse1: 简单的反向
+	// Reverse2: 简单的反向
+
 }
