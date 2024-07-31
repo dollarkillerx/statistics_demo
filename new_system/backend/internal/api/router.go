@@ -14,6 +14,8 @@ func (a *ApiServer) Router() {
 		ea.POST("/broadcast", a.broadcast)
 		// subscription 订阅
 		ea.POST("/subscription", a.subscription)
+		// errors 错误
+		ea.POST("/errors", a.errors)
 	}
 }
 

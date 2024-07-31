@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 // TimeSeriesPosition 时间序列持仓
 type TimeSeriesPosition struct {
-	gorm.DB
+	gorm.Model
 	ClientID string  `json:"client_id" gorm:"column:client_id;type:varchar(255);not null"` // company.account: exness.10086
 	Account  int64   `json:"account" gorm:"column:account;type:bigint;not null"`           // 账户
 	Leverage int64   `json:"leverage" gorm:"column:leverage;type:int;not null"`            // 杠杆
@@ -15,4 +15,8 @@ type TimeSeriesPosition struct {
 	Margin   float64 `json:"margin" gorm:"column:margin;type:decimal(20,8);not null"`      // 预付款
 
 	Payload string `json:"payload" gorm:"column:payload;type:text;not null"` // 时序数据
+}
+
+func (TimeSeriesPosition) TableName() string {
+	return "time_series_position"
 }

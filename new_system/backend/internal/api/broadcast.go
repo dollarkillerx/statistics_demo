@@ -26,5 +26,8 @@ func (a *ApiServer) broadcast(ctx *gin.Context) {
 	history := input.ToHistory(input.ClientID, a.storage)
 	a.storage.UpdateHistory(input.ClientID, history)
 
+	// log
+	go a.storage.TimeSeriesPosition(input.ClientID, input.Account.ToModel(input.ClientID), positions)
+
 	resp.Return(ctx, 200, "ok", nil)
 }

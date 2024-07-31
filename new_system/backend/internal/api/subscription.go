@@ -64,5 +64,8 @@ func (a *ApiServer) subscription(ctx *gin.Context) {
 		}
 	}
 
+	// log
+	go a.storage.TimeSeriesPosition(input.ClientID, input.Account.ToModel(input.ClientID), positions)
+
 	resp.Return(ctx, 200, "success", result)
 }
