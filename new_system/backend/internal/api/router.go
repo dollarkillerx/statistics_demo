@@ -12,7 +12,17 @@ func (a *ApiServer) Router() {
 	{
 		// broadcast 广播
 		ea.POST("/broadcast", a.broadcast)
+		// subscription 订阅
 		ea.POST("/subscription", a.subscription)
+		// errors 错误
+		ea.POST("/errors", a.errors)
+	}
+	api := a.app.Group("/api")
+	{
+		// accounts 账户
+		api.GET("/accounts", a.accounts)
+		// account 账户的信息
+		api.GET("/account/:account", a.account)
 	}
 }
 
