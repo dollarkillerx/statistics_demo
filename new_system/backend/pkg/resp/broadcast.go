@@ -1,11 +1,7 @@
 package resp
 
 import (
-	"github.com/dollarkillerx/backend/internal/storage"
 	"github.com/dollarkillerx/backend/pkg/enum"
-	"github.com/dollarkillerx/backend/pkg/models"
-	"github.com/rs/xid"
-	"time"
 )
 
 type BroadcastPayload struct {
@@ -26,25 +22,6 @@ type Account struct {
 	Margin   float64 `json:"margin"`   // 预付款
 }
 
-func (a *Account) ToModel(clientID string) models.Account {
-	id := xid.New().String()
-	return models.Account{
-		BaseModel: models.BaseModel{
-			ID:        id,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-		ClientID: clientID,
-		Account:  a.Account,
-		Leverage: a.Leverage,
-		Server:   a.Server,
-		Company:  a.Company,
-		Balance:  a.Balance,
-		Profit:   a.Profit,
-		Margin:   a.Margin,
-	}
-}
-
 // Positions 持仓
 type Positions struct {
 	OrderID     int64          `json:"order_id"`     // 持仓ID
@@ -63,73 +40,4 @@ type Positions struct {
 	CommonInternal    string `json:"common_internal"`     // 系统内部注释
 	OpeningTimeSystem int64  `json:"opening_time_system"` // 开仓时间系统
 	ClosingTimeSystem int64  `json:"closing_time_system"` // 平仓时间系统
-}
-
-func (b *BroadcastPayload) ToPositions(clientID string, storage *storage.Storage) []models.Positions {
-	var result []models.Positions
-
-	for _, v := range b.Positions {
-		id := xid.New().String()
-		openingTimeSystem := storage.GenTime(clientID + "openingTimeSystem")
-		result = append(result, models.Positions{
-			BaseModel: models.BaseModel{
-				ID:        id,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			},
-			ClientID:          clientID,
-			OrderID:           v.OrderID,
-			Direction:         v.Direction,
-			Symbol:            v.Symbol,
-			Magic:             v.Magic,
-			OpenPrice:         v.OpenPrice,
-			Volume:            v.Volume,
-			Market:            v.Market,
-			Swap:              v.Swap,
-			Profit:            v.Profit,
-			Common:            v.Common,
-			OpeningTime:       v.OpeningTime,
-			ClosingTime:       v.ClosingTime,
-			CommonInternal:    "",
-			OpeningTimeSystem: openingTimeSystem,
-			ClosingTimeSystem: 0,
-		})
-	}
-
-	return result
-}
-
-func (b *BroadcastPayload) ToHistory(clientID string, storage *storage.Storage) []models.History {
-	var result []models.History
-
-	for _, v := range b.Positions {
-		id := xid.New().String()
-		var openingTimeSystem = storage.GenTime(clientID + "openingTimeSystem")
-		var closingTimeSystem = storage.GenTime(clientID + "closingTimeSystem")
-		result = append(result, models.History{
-			BaseModel: models.BaseModel{
-				ID:        id,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			},
-			ClientID:          clientID,
-			OrderID:           v.OrderID,
-			Direction:         v.Direction,
-			Symbol:            v.Symbol,
-			Magic:             v.Magic,
-			OpenPrice:         v.OpenPrice,
-			Volume:            v.Volume,
-			Market:            v.Market,
-			Swap:              v.Swap,
-			Profit:            v.Profit,
-			Common:            v.Common,
-			OpeningTime:       v.OpeningTime,
-			ClosingTime:       v.ClosingTime,
-			CommonInternal:    "",
-			OpeningTimeSystem: openingTimeSystem,
-			ClosingTimeSystem: closingTimeSystem,
-		})
-	}
-
-	return result
 }
