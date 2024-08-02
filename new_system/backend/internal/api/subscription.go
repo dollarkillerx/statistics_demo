@@ -39,11 +39,15 @@ func (a *ApiServer) subscription(ctx *gin.Context) {
 	pos := a.storage.GetPositionsByID(input.SubscriptionClientID)
 	if len(pos) > 0 {
 		for i, _ := range pos {
-			if pos[i].Direction == enum.BUY {
-				pos[i].Direction = enum.SELL
-			} else {
-				pos[i].Direction = enum.BUY
+
+			if input.StrategyCode == "Reverse" {
+				if pos[i].Direction == enum.BUY {
+					pos[i].Direction = enum.SELL
+				} else {
+					pos[i].Direction = enum.BUY
+				}
 			}
+
 			result.OpenPositions = append(result.OpenPositions, resp.Positions{
 				OrderID:           pos[i].OrderID,
 				Direction:         pos[i].Direction,

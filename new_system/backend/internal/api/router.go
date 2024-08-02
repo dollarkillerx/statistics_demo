@@ -17,6 +17,13 @@ func (a *ApiServer) Router() {
 		// errors 错误
 		ea.POST("/errors", a.errors)
 	}
+	api := a.app.Group("/api")
+	{
+		// accounts 账户
+		api.GET("/accounts", a.accounts)
+		// account 账户的信息
+		api.GET("/account/:account", a.account)
+	}
 }
 
 func (a *ApiServer) HealthCheck(ctx *gin.Context) {
