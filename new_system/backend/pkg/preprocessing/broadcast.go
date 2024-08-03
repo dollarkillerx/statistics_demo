@@ -2,13 +2,14 @@ package preprocessing
 
 import (
 	"fmt"
+	"sort"
+	"time"
+
 	"github.com/dollarkillerx/backend/internal/storage"
 	"github.com/dollarkillerx/backend/pkg/enum"
 	"github.com/dollarkillerx/backend/pkg/models"
 	"github.com/dollarkillerx/backend/pkg/resp"
 	"github.com/rs/xid"
-	"sort"
-	"time"
 )
 
 func AccountToModel(clientID string, a resp.Account) models.Account {
