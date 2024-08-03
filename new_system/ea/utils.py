@@ -82,6 +82,7 @@ class MT5utils:
                 "type_time": mt5.ORDER_TIME_GTC,  # 订单将一直保留在队列中，直到手动取消
                 "type_filling": mt5.ORDER_FILLING_FOK,  # 不满足条件不执行
             }
+            print(self._get_currency_name(symbol))
             if sl != 0:
                 request['sl'] = price - sl * point * 10
             if tp != 0:
@@ -103,7 +104,6 @@ class MT5utils:
                 raise ValueError("order_send failed, retcode={}".format(result.retcode))
         except Exception as e:
             print(f'buy exception: {e}')
-            exit(1)
 
     # sell 市价
     def sell(self, symbol: str, volume: float, comment='', sl=0, tp=0, deviation=0):
@@ -111,6 +111,7 @@ class MT5utils:
             if deviation == 0:
                 deviation = self.deviation
             point = self._get_symbol_info(symbol).point
+            print(self._get_currency_name(symbol))
             price = mt5.symbol_info_tick(self._get_currency_name(symbol)).bid
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
@@ -145,7 +146,6 @@ class MT5utils:
                 raise ValueError("order_send failed, retcode={}".format(result.retcode))
         except Exception as e:
             print(f'sell exception: {e}')
-            exit(1)
 
     # 持仓订单
     def positions_total(self, magic=0):

@@ -4,7 +4,7 @@ from sdk import NewSystemSDK
 
 address = "http://127.0.0.1:8181"
 mt5_path = ""
-suffix = ""
+suffix = "m"
 company_key = "exness"
 
 # 发布者

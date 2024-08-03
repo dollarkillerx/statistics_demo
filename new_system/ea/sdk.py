@@ -1,4 +1,5 @@
 import random
+import time
 
 import requests
 
@@ -6,6 +7,7 @@ import utils
 import pandas as pd
 from datetime import datetime, timedelta
 import json
+
 
 class Account:
     def __init__(self, account, leverage, server, company, balance, profit, margin):
@@ -42,7 +44,8 @@ class Account:
 
 
 class Positions:
-    def __init__(self, order_id, direction, symbol, magic, open_price, volume, market, swap, profit, common, opening_time, closing_time):
+    def __init__(self, order_id, direction, symbol, magic, open_price, volume, market, swap, profit, common,
+                 opening_time, closing_time):
         self.order_id = order_id
         self.direction = direction
         self.symbol = symbol
@@ -89,6 +92,7 @@ class Positions:
             closing_time=data["closing_time"]
         )
 
+
 class BroadcastPayload:
     def __init__(self, client_id, account, positions, history):
         self.client_id = client_id
@@ -115,6 +119,7 @@ class BroadcastPayload:
             positions=positions,
             history=history
         )
+
 
 class History:
     def __init__(self, ticket, time_setup, type_, magic, position_id, volume_initial, price_current, symbol, comment):
@@ -155,8 +160,10 @@ class History:
             "comment": self.comment
         }
 
+
 from pydantic import BaseModel
 from typing import List, Optional
+
 
 class Position(BaseModel):
     order_id: int
@@ -175,16 +182,19 @@ class Position(BaseModel):
     opening_time_system: int
     closing_time_system: int
 
+
 class Data(BaseModel):
     client_id: str
     subscription_client_id: str
     open_positions: Optional[List[Position]] = None  # 将 open_positions 设置为可选
     close_position: Optional[List[Position]] = None  # 将 close_positions 设置为可选
 
+
 class ResponseBody(BaseModel):
     code: int
     msg: str
     data: Data
+
 
 class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
     def __init__(self, address: str, mt5_path: str, suffix="", company_key=""):
@@ -192,6 +202,7 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         self.mt5_path = mt5_path
         self.suffix = suffix
         self.mt5 = utils.MT5utils(path=mt5_path)
+        self.mt5.set_currency_suffix(suffix)
         account = self.mt5.get_mt5().account_info()
         self.client_id = company_key + "." + str(account.login)
         self.Account = Account(account.login, account.leverage, account.server, account.company, account.balance,
@@ -251,12 +262,13 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         account = Account(account.login, account.leverage, account.server, account.company, account.balance,
                           account.profit, account.margin)
 
-        r = BroadcastPayload(self.client_id, account,  resPos, history)
-        response = requests.post(self.address + "/ea/broadcast", data=json.dumps(r.to_dict()), headers={"Content-Type": "application/json"})
+        r = BroadcastPayload(self.client_id, account, resPos, history)
+        response = requests.post(self.address + "/ea/broadcast", data=json.dumps(r.to_dict()),
+                                 headers={"Content-Type": "application/json"})
 
-        print(response.status_code, "   ",random.Random().randint(0, 10))
+        print(response.status_code, "   ", random.Random().randint(0, 10))
 
-    def subscription(self, subscription_client_id,strategy_code = "Reverse"):
+    def subscription(self, subscription_client_id, strategy_code="Reverse"):
         resPos = []
         # 获取当前持仓
         positions = self.mt5.positions_get()
@@ -309,12 +321,13 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         account = Account(account.login, account.leverage, account.server, account.company, account.balance,
                           account.profit, account.margin)
 
-        r = BroadcastPayload(self.client_id, account,  resPos, history)
+        r = BroadcastPayload(self.client_id, account, resPos, history)
         rj = r.to_dict()
         rj['subscription_client_id'] = subscription_client_id
         rj['strategy_code'] = strategy_code
-        response = requests.post(self.address + "/ea/subscription", data=json.dumps(rj), headers={"Content-Type": "application/json"})
-        print(response.status_code, "   ",random.Random().randint(0, 10))
+        response = requests.post(self.address + "/ea/subscription", data=json.dumps(rj),
+                                 headers={"Content-Type": "application/json"})
+        print(response.status_code, "   ", random.Random().randint(0, 10))
         # print(type(response.text))
         # print(response.text)
         # json parse
@@ -322,7 +335,38 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         # print(response_body.data.close_position)
         # 执行买单
         positions = self.mt5.positions_get()
-        for i in positions:
 
-        # 执行卖单
+        # 关闭订单
+        if response_body.data.close_position:
+            for closePos in response_body.data.close_position:
+                for position in positions:
+                    if position.comment == str(closePos.order_id):
+                        self.mt5.close(position.ticket)
+        # 开新订单
 
+        if response_body.data.open_positions:
+            for pos in response_body.data.open_positions:
+                ex = False
+                for position in positions:
+                    if position.comment == str(pos.order_id):
+                        ex = True
+                # 执行卖单
+                if ex == False:
+                    current_timestamp = datetime.now().timestamp()
+                    symbol = pos.symbol[0:len(pos.symbol)-1]
+                    # print(pos.opening_time)
+                    print(pos.opening_time,"   ", pos.symbol,current_timestamp - pos.opening_time > 600)
+                    if current_timestamp - pos.opening_time > 600:
+                        continue
+
+                    symbol_info = self.mt5.symbol_info(symbol)
+                    if symbol_info is None:
+                        continue
+                    if symbol_info.visible == False:
+                        continue
+                    # buy
+                    if pos.direction == "BUY":
+                        self.mt5.buy(symbol=symbol, volume=pos.volume, comment=str(pos.order_id))
+                    # sell
+                    if pos.direction == "SELL":
+                        self.mt5.sell(symbol=symbol, volume=pos.volume, comment=str(pos.order_id))
