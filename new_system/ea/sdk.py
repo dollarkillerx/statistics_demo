@@ -155,6 +155,37 @@ class History:
             "comment": self.comment
         }
 
+from pydantic import BaseModel
+from typing import List, Optional
+
+class Position(BaseModel):
+    order_id: int
+    direction: str
+    symbol: str
+    magic: int
+    open_price: float
+    volume: float
+    market: float
+    swap: float
+    profit: float
+    common: str
+    opening_time: int
+    closing_time: int
+    common_internal: str
+    opening_time_system: int
+    closing_time_system: int
+
+class Data(BaseModel):
+    client_id: str
+    subscription_client_id: str
+    open_positions: Optional[List[Position]] = None  # 将 open_positions 设置为可选
+    close_position: Optional[List[Position]] = None  # 将 close_positions 设置为可选
+
+class ResponseBody(BaseModel):
+    code: int
+    msg: str
+    data: Data
+
 class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
     def __init__(self, address: str, mt5_path: str, suffix="", company_key=""):
         self.address = address
@@ -225,5 +256,73 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
 
         print(response.status_code, "   ",random.Random().randint(0, 10))
 
+    def subscription(self, subscription_client_id,strategy_code = "Reverse"):
+        resPos = []
+        # 获取当前持仓
+        positions = self.mt5.positions_get()
+        for position in positions:
+            resPos.append(Positions.from_dict({
+                "order_id": position.ticket,
+                "direction": "SELL" if position.type == 1 else "BUY",
+                "symbol": position.symbol,
+                "magic": position.magic,
+                "open_price": position.price_open,
+                "volume": position.volume,
+                "market": position.price_current,
+                "swap": position.swap,
+                "profit": position.profit,
+                "common": position.comment,
+                "opening_time": position.time,
+                "closing_time": 0
+            }))
+        # 获取历史持仓
+        # 获取当前时间
+        current_time = datetime.now()
+        # 设置历史数据的开始和结束时间
+        start_time = current_time - timedelta(days=30)  # 假设从一年前开始获取数据
+        end_time = current_time
 
+        # 获取历史交易记录
+        deals = self.mt5.get_mt5().history_orders_get(start_time, end_time)
+
+        cm = {}
+        history = []
+        for deal in deals:
+            newDeals = self.mt5.get_mt5().history_orders_get(position=deal.position_id)
+            for item in newDeals:
+                deal_dict = History.from_dict({
+                    "ticket": item.ticket,
+                    "time_setup": item.time_setup,
+                    "type": "SELL" if item.type == 1 else "BUY",
+                    "magic": item.magic,
+                    "position_id": item.position_id,
+                    "volume_initial": item.volume_initial,
+                    "price_current": item.price_current,
+                    "symbol": item.symbol,
+                    "comment": item.comment,
+                })
+                if cm.get(item.ticket) is None:
+                    history.append(deal_dict)
+                    cm[item.ticket] = deal_dict
+
+        account = self.mt5.get_mt5().account_info()
+        account = Account(account.login, account.leverage, account.server, account.company, account.balance,
+                          account.profit, account.margin)
+
+        r = BroadcastPayload(self.client_id, account,  resPos, history)
+        rj = r.to_dict()
+        rj['subscription_client_id'] = subscription_client_id
+        rj['strategy_code'] = strategy_code
+        response = requests.post(self.address + "/ea/subscription", data=json.dumps(rj), headers={"Content-Type": "application/json"})
+        print(response.status_code, "   ",random.Random().randint(0, 10))
+        # print(type(response.text))
+        # print(response.text)
+        # json parse
+        response_body = ResponseBody.parse_raw(response.text)
+        # print(response_body.data.close_position)
+        # 执行买单
+        positions = self.mt5.positions_get()
+        for i in positions:
+
+        # 执行卖单
 
