@@ -7,3 +7,4 @@ company_key = "exness"
 
 if __name__ == '__main__':
     sdk = NewSystemSDK(address, mt5_path, suffix, company_key)
+    sdk.broadcast()
