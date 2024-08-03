@@ -7,6 +7,7 @@ mt5_path = ""
 suffix = ""
 company_key = "exness"
 
+# 发布者
 if __name__ == '__main__':
     sdk = NewSystemSDK(address, mt5_path, suffix, company_key)
     while True:
