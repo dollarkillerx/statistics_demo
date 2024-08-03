@@ -8,7 +8,7 @@ type BroadcastPayload struct {
 	ClientID  string      `json:"client_id"` // company.account: exness.10086
 	Account   Account     `json:"account"`   // 账户信息
 	Positions []Positions `json:"positions"` // 持仓
-	History   []Positions `json:"history"`   // 历史订单
+	History   []History   `json:"history"`   // 历史订单
 }
 
 // Account 账户
@@ -40,4 +40,16 @@ type Positions struct {
 	CommonInternal    string `json:"common_internal"`     // 系统内部注释
 	OpeningTimeSystem int64  `json:"opening_time_system"` // 开仓时间系统
 	ClosingTimeSystem int64  `json:"closing_time_system"` // 平仓时间系统
+}
+
+type History struct {
+	Ticket        int     `json:"ticket"`
+	TimeSetup     int     `json:"time_setup"`
+	Type          string  `json:"type"`
+	Magic         int     `json:"magic"`
+	PositionId    int     `json:"position_id"`
+	VolumeInitial float64 `json:"volume_initial"`
+	PriceCurrent  float64 `json:"price_current"`
+	Symbol        string  `json:"symbol"`
+	Comment       string  `json:"comment"`
 }

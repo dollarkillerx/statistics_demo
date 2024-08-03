@@ -8,7 +8,7 @@ type SubscriptionPayload struct {
 	ClientID  string      `json:"client_id"` // company.account: exness.10086
 	Account   Account     `json:"account"`   // 账户信息
 	Positions []Positions `json:"positions"` // 持仓
-	History   []Positions `json:"history"`   // 历史订单
+	History   []History   `json:"history"`   // 历史订单
 }
 
 type SubscriptionResponse struct {

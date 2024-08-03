@@ -24,7 +24,7 @@ func (a *ApiServer) broadcast(ctx *gin.Context) {
 	a.storage.UpdatePositions(input.ClientID, positions)
 
 	// 3. 更新历史订单
-	history := preprocessing.BroadcastPayloadToHistory(input.ClientID, a.storage, &input)
+	history, _ := preprocessing.HistoryToHistory(input.History)
 	a.storage.UpdateHistory(input.ClientID, history)
 
 	// log
