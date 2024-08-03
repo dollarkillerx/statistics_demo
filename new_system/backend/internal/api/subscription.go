@@ -73,6 +73,38 @@ func (a *ApiServer) subscription(ctx *gin.Context) {
 		}
 	}
 
+	his := a.storage.GetHistoryByID(input.SubscriptionClientID)
+	if len(his) > 0 {
+		for i, _ := range his {
+
+			if input.StrategyCode == "Reverse" {
+				if his[i].Direction == enum.BUY {
+					his[i].Direction = enum.SELL
+				} else {
+					his[i].Direction = enum.BUY
+				}
+			}
+
+			result.ClosePosition = append(result.ClosePosition, resp.Positions{
+				OrderID:           his[i].OrderID,
+				Direction:         his[i].Direction,
+				Symbol:            his[i].Symbol,
+				Magic:             his[i].Magic,
+				OpenPrice:         his[i].OpenPrice,
+				Volume:            his[i].Volume,
+				Market:            his[i].Market,
+				Swap:              his[i].Swap,
+				Profit:            his[i].Profit,
+				Common:            his[i].Common,
+				OpeningTime:       his[i].OpeningTime,
+				ClosingTime:       his[i].ClosingTime,
+				OpeningTimeSystem: his[i].OpeningTimeSystem,
+				ClosingTimeSystem: his[i].ClosingTimeSystem,
+				CommonInternal:    his[i].CommonInternal,
+			})
+		}
+	}
+
 	// log
 	go a.storage.TimeSeriesPosition(input.ClientID, preprocessing.AccountToModel(input.ClientID, input.Account), positions)
 

@@ -61,3 +61,19 @@ func (s *Storage) UpdateHistory(clientID string, positions []models.History) {
 	// 	1. 直接存储 positions 缓存时间 30日
 	s.cache.SetEx(context.TODO(), key, string(marshal), time.Hour*24*30)
 }
+
+func (s *Storage) GetHistoryByID(clientID string) []models.History {
+	var key = CacheHistory.GetKey(clientID)
+	result, err := s.cache.Get(context.TODO(), key).Result()
+	if err != nil {
+		return nil
+	}
+
+	var res []models.History
+	err = json.Unmarshal([]byte(result), &res)
+	if err != nil {
+		return nil
+	}
+
+	return res
+}
