@@ -13,7 +13,6 @@ const routes: Array<RouteRecordRaw> = [
       isRoot: true,
       activeMenu: 'about_index',
       icon: renderIcon(ProjectOutlined),
-      sort: 1,
     },
     children: [
       {
