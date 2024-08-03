@@ -1,6 +1,7 @@
 package preprocessing
 
 import (
+	"fmt"
 	"github.com/dollarkillerx/backend/internal/storage"
 	"github.com/dollarkillerx/backend/pkg/enum"
 	"github.com/dollarkillerx/backend/pkg/models"
@@ -34,7 +35,7 @@ func BroadcastPayloadToPositions(clientID string, storage *storage.Storage, b *r
 
 	for _, v := range b.Positions {
 		id := xid.New().String()
-		openingTimeSystem := storage.GenTime(clientID + "openingTimeSystem")
+		openingTimeSystem := storage.GenTime(fmt.Sprintf("%s_%s_%d", clientID, "openingTimeSystem", v.OrderID))
 		result = append(result, models.Positions{
 			BaseModel: models.BaseModel{
 				ID:        id,
@@ -68,8 +69,8 @@ func BroadcastPayloadToHistory(clientID string, storage *storage.Storage, b *res
 
 	for _, v := range b.Positions {
 		id := xid.New().String()
-		var openingTimeSystem = storage.GenTime(clientID + "openingTimeSystem")
-		var closingTimeSystem = storage.GenTime(clientID + "closingTimeSystem")
+		var openingTimeSystem = storage.GenTime(fmt.Sprintf("%s_%s_%d", clientID, "openingTimeSystem", v.OrderID))
+		var closingTimeSystem = storage.GenTime(fmt.Sprintf("%s_%s_%d", clientID, "closingTimeSystem", v.OrderID))
 		result = append(result, models.History{
 			BaseModel: models.BaseModel{
 				ID:        id,
@@ -103,7 +104,7 @@ func SubscriptionPayloadToPositions(clientID string, storage *storage.Storage, b
 
 	for _, v := range b.Positions {
 		id := xid.New().String()
-		openingTimeSystem := storage.GenTime(clientID + "openingTimeSystem")
+		openingTimeSystem := storage.GenTime(fmt.Sprintf("%s_%s_%d", clientID, "openingTimeSystem", v.OrderID))
 		result = append(result, models.Positions{
 			BaseModel: models.BaseModel{
 				ID:        id,
@@ -137,8 +138,8 @@ func SubscriptionPayloadToHistory(clientID string, storage *storage.Storage, b *
 
 	for _, v := range b.Positions {
 		id := xid.New().String()
-		var openingTimeSystem = storage.GenTime(clientID + "openingTimeSystem")
-		var closingTimeSystem = storage.GenTime(clientID + "closingTimeSystem")
+		var openingTimeSystem = storage.GenTime(fmt.Sprintf("%s_%s_%d", clientID, "openingTimeSystem", v.OrderID))
+		var closingTimeSystem = storage.GenTime(fmt.Sprintf("%s_%s_%d", clientID, "closingTimeSystem", v.OrderID))
 		result = append(result, models.History{
 			BaseModel: models.BaseModel{
 				ID:        id,
