@@ -140,10 +140,9 @@ class Classic:
                 print("---------------------------eeeeeeeeeeeeeeeee-------------------------")
                 print(e)
                 print("---------------------------eeeeeeeeeeeeeeeee-------------------------")
-            finally:
-                random_number = random.randint(1, 100)
-                print(random_number)
-                time.sleep(100 / 1000)
+            random_number = random.randint(1, 100)
+            print(random_number)
+            time.sleep(100 / 1000)
 
 
 
