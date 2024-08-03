@@ -64,7 +64,7 @@ func (a *ApiServer) subscription(ctx *gin.Context) {
 				Swap:              pos[i].Swap,
 				Profit:            pos[i].Profit,
 				Common:            pos[i].Common,
-				OpeningTime:       pos[i].OpeningTime,
+				OpeningTime:       pos[i].OpeningTimeSystem,
 				ClosingTime:       pos[i].ClosingTime,
 				OpeningTimeSystem: pos[i].OpeningTimeSystem,
 				ClosingTimeSystem: pos[i].ClosingTimeSystem,

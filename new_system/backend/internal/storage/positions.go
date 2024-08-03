@@ -14,7 +14,7 @@ func (s *Storage) GenTime(key string) int64 {
 	now := time.Now().Unix()
 	result, err := s.cache.Get(context.TODO(), key).Result()
 
-	if err == nil {
+	if err != nil {
 		s.cache.SetEx(context.TODO(), key, strconv.Itoa(int(now)), time.Hour*24*30)
 		return now
 	} else {
