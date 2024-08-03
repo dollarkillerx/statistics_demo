@@ -1,6 +1,7 @@
 import utils
 import pandas as pd
-
+from datetime import datetime, timedelta
+import json
 
 class Account:
     def __init__(self, account, leverage, server, company, balance, profit, margin):
@@ -54,7 +55,7 @@ class Positions:
     def to_dict(self):
         return {
             "order_id": self.order_id,
-            "direction": self.direction.value,
+            "direction": self.direction,
             "symbol": self.symbol,
             "magic": self.magic,
             "open_price": self.open_price,
@@ -103,7 +104,7 @@ class BroadcastPayload:
     def from_dict(data):
         account = Account.from_dict(data["account"])
         positions = [Positions.from_dict(position) for position in data["positions"]]
-        history = [Positions.from_dict(history_item) for history_item in data["history"]]
+        history = [History.from_dict(history_item) for history_item in data["history"]]
         return BroadcastPayload(
             client_id=data["client_id"],
             account=account,
@@ -111,6 +112,44 @@ class BroadcastPayload:
             history=history
         )
 
+class History:
+    def __init__(self, ticket, time_setup, type_, magic, position_id, volume_initial, price_current, symbol, comment):
+        self.ticket = ticket
+        self.time_setup = time_setup
+        self.type = type_
+        self.magic = magic
+        self.position_id = position_id
+        self.volume_initial = volume_initial
+        self.price_current = price_current
+        self.symbol = symbol
+        self.comment = comment
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            ticket=data.get("ticket"),
+            time_setup=data.get("time_setup"),
+            type_=data.get("type"),
+            magic=data.get("magic"),
+            position_id=data.get("position_id"),
+            volume_initial=data.get("volume_initial"),
+            price_current=data.get("price_current"),
+            symbol=data.get("symbol"),
+            comment=data.get("comment")
+        )
+
+    def to_dict(self):
+        return {
+            "ticket": self.ticket,
+            "time_setup": self.time_setup,
+            "type": self.type,
+            "magic": self.magic,
+            "position_id": self.position_id,
+            "volume_initial": self.volume_initial,
+            "price_current": self.price_current,
+            "symbol": self.symbol,
+            "comment": self.comment
+        }
 
 class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
     def __init__(self, address: str, mt5_path: str, suffix="", company_key=""):
@@ -123,4 +162,62 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         self.Account = Account(account.login, account.leverage, account.server, account.company, account.balance,
                                account.profit, account.margin)
         print(self.Account.to_dict())
+
+    def broadcast(self):
+        resPos = []
+        # 获取当前持仓
+        positions = self.mt5.positions_get()
+        for position in positions:
+            resPos.append(Positions.from_dict({
+                "order_id": position.ticket,
+                "direction": "SELL" if position.type == 1 else "BUY",
+                "symbol": position.symbol,
+                "magic": position.magic,
+                "open_price": position.price_open,
+                "volume": position.volume,
+                "market": position.price_current,
+                "swap": position.swap,
+                "profit": position.profit,
+                "common": position.comment,
+                "opening_time": position.time,
+                "closing_time": 0
+            }))
+        # 获取历史持仓
+        # 获取当前时间
+        current_time = datetime.now()
+        # 设置历史数据的开始和结束时间
+        start_time = current_time - timedelta(days=30)  # 假设从一年前开始获取数据
+        end_time = current_time
+
+        # 获取历史交易记录
+        deals = self.mt5.get_mt5().history_orders_get(start_time, end_time)
+
+        cm = {}
+        history = []
+        for deal in deals:
+            newDeals = self.mt5.get_mt5().history_orders_get(position=deal.position_id)
+            for item in newDeals:
+                deal_dict = History.from_dict({
+                    "ticket": item.ticket,
+                    "time_setup": item.time_setup,
+                    "type": "SELL" if item.type == 1 else "BUY",
+                    "magic": item.magic,
+                    "position_id": item.position_id,
+                    "volume_initial": item.volume_initial,
+                    "price_current": item.price_current,
+                    "symbol": item.symbol,
+                    "comment": item.comment,
+                })
+                if cm.get(item.ticket) is None:
+                    history.append(deal_dict)
+                    cm[item.ticket] = deal_dict
+
+        account = self.mt5.get_mt5().account_info()
+        account = Account(account.login, account.leverage, account.server, account.company, account.balance,
+                          account.profit, account.margin)
+
+        r = BroadcastPayload(self.client_id, account,  resPos, history)
+        print(json.dumps(r.to_dict()))
+
+
 
