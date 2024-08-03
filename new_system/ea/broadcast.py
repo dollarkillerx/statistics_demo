@@ -2,8 +2,8 @@ import time
 
 from sdk import NewSystemSDK
 
-address = "http://127.0.0.1:8181"
-mt5_path = ""
+address = "http://192.168.40.238:8181"
+mt5_path = "C:\\Users\\Administrator\\Desktop\\MT3\\terminal64.exe"
 suffix = "m"
 company_key = "exness"
 
