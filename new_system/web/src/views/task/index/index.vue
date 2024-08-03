@@ -3,18 +3,21 @@ import { useRouter } from 'vue-router';
 import { h, onMounted, ref, Text } from "vue";
 import type { DataTableColumns } from "naive-ui";
 import { useMessage,NButton } from "naive-ui";
-import { TaskAccount, TaskAccountItem } from "@/api/task/task";
+import { GetTaskByAccount, Task, TaskAccount, TaskAccountItem } from "@/api/task/task";
 import { Ok } from "@/api/task/common";
 
 const router = useRouter();
-
 const data = ref<TaskAccountItem[]>([]);
-
 const message = useMessage();
+const tasks = ref<Task>()
 const columns = createColumns({
-  play(row: TaskAccountItem) {
-    message.info(`Play ${row.id}`);
-
+  async play(row: TaskAccountItem) {
+    // message.info(`Play ${row.id}`);
+    const resp = await GetTaskByAccount(row.client_id);
+    if (resp instanceof Ok) {
+      tasks.value = resp.value;
+      console.log(tasks.value);
+    }
   }
 });
 
@@ -85,6 +88,17 @@ onMounted(async () => {
   }
 });
 
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  const year = date.getFullYear();
+  const month = ('0' + (date.getMonth() + 1)).slice(-2);
+  const day = ('0' + date.getDate()).slice(-2);
+  const hours = ('0' + date.getHours()).slice(-2);
+  const minutes = ('0' + date.getMinutes()).slice(-2);
+  const seconds = ('0' + date.getSeconds()).slice(-2);
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 </script>
 
 <template>
@@ -95,6 +109,51 @@ onMounted(async () => {
       :pagination="false"
       :bordered="false"
     />
+  </div>
+
+  <div v-if="tasks" class="bg-white my-3 rounded-xl p-1">
+    <div class="text-2xl ">数据统计: </div>
+    <div v-for="item in tasks.profits" :key="item.period">
+      <div v-if="item.min_profit != 0 && item.max_profit != 0" class="flex flex-row space-x-10">
+        <div> 时间： {{ item.period }}</div>
+        <div>最低利润: {{ item.min_profit }}</div>
+        <div>最高利润: {{ item.max_profit }}</div>
+      </div>
+    </div>
+
+
+    <div v-if="tasks" class="bg-white my-3 rounded-xl p-1">
+      <div class="text-2xl ">当前持仓: </div>
+      <n-table :bordered="false" :single-line="false">
+        <thead>
+        <tr>
+          <th>order id</th>
+          <th>opening_time</th>
+          <th>direction</th>
+          <th>symbol</th>
+          <th>open price</th>
+          <th>volume</th>
+          <th>market</th>
+          <th>profit</th>
+          <th>common</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="item in tasks.positions" :key="item.id">
+          <td>{{ item.order_id }}</td>
+          <td>{{ formatDate(item.opening_time) }}</td>
+          <td>{{ item.direction }}</td>
+          <td>{{ item.symbol }}</td>
+          <td>{{ item.open_price }}</td>
+          <td>{{ item.volume }}</td>
+          <td>{{ item.market }}</td>
+          <td>{{ item.profit }}</td>
+          <td>{{ item.common }}</td>
+        </tr>
+
+        </tbody>
+      </n-table>
+    </div>
   </div>
 </template>
 

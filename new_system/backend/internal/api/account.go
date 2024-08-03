@@ -35,21 +35,23 @@ func (a *ApiServer) account(ctx *gin.Context) {
 	firstOfMonth := now.Format("2006-01-01")
 
 	type ProfitResult struct {
+		Period    string  `json:"period"`
 		MaxProfit float64 `json:"max_profit"`
 		MinProfit float64 `json:"min_profit"`
 	}
 
 	var result ProfitResult
 
-	// 存储所有统计数据
-	profitData := make(map[string]ProfitResult)
+	// 存储所有统计数据的列表
+	var profitData []ProfitResult
 
 	// 当天最高利润和最低利润
 	a.storage.DB().Model(&models.TimeSeriesPosition{}).
 		Select("MAX(profit) as max_profit, MIN(profit) as min_profit").
 		Where("client_id = ? AND DATE(created_at) = ?", param, today).
 		Scan(&result)
-	profitData["today"] = result
+	result.Period = "today"
+	profitData = append(profitData, result)
 
 	// 最近5天每天的最高利润和最低利润
 	for i := 0; i < 5; i++ {
@@ -58,7 +60,8 @@ func (a *ApiServer) account(ctx *gin.Context) {
 			Select("MAX(profit) as max_profit, MIN(profit) as min_profit").
 			Where("client_id = ? AND DATE(created_at) = ?", param, day).
 			Scan(&result)
-		profitData[day] = result
+		result.Period = day
+		profitData = append(profitData, result)
 	}
 
 	// 本月最高利润和最低利润
@@ -66,14 +69,16 @@ func (a *ApiServer) account(ctx *gin.Context) {
 		Select("MAX(profit) as max_profit, MIN(profit) as min_profit").
 		Where("client_id = ? AND created_at >= ?", param, firstOfMonth).
 		Scan(&result)
-	profitData["this_month"] = result
+	result.Period = "this_month"
+	profitData = append(profitData, result)
 
 	// 历史最高利润和最低利润
 	a.storage.DB().Model(&models.TimeSeriesPosition{}).
 		Select("MAX(profit) as max_profit, MIN(profit) as min_profit").
 		Where("client_id = ?", param).
 		Scan(&result)
-	profitData["all_time"] = result
+	result.Period = "all_time"
+	profitData = append(profitData, result)
 
 	// 返回利润统计数据
 	resp.Return(ctx, 200, "ok", gin.H{
