@@ -22,9 +22,9 @@ func NewApiServer(storage *storage.Storage, conf conf.Config) *ApiServer {
 func (a *ApiServer) Run() error {
 
 	a.app = gin.New()
+	a.app.Use(middleware.Cors())
 	a.app.Use(middleware.HttpRecover())
 	a.app.Use(gin.Logger())
-	a.app.Use(middleware.Cors())
 
 	a.Router()
 
