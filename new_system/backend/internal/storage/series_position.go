@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/dollarkillerx/backend/pkg/models"
 )
@@ -20,11 +22,8 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 		after += fmt.Sprintf("%d", v.OrderID)
 	}
 
-	var beforeTSP models.TimeSeriesPosition
-	err := s.db.Model(&models.TimeSeriesPosition{}).
-		Where("client_id = ?", clientID).
-		Order("created_at desc").Limit(1).First(&beforeTSP).Error
-	if err != nil {
+	beforeTSP := s.getLastTimeSeriesPosition(clientID)
+	if beforeTSP == nil {
 		marshal, _ := json.Marshal(positions)
 		s.db.Model(&models.TimeSeriesPosition{}).Create(&models.TimeSeriesPosition{
 			ClientID: clientID,
@@ -37,11 +36,13 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 			Margin:   account.Margin,
 			Payload:  string(marshal),
 		})
+
+		s.createLastTimeSeriesPosition(clientID)
 		return
 	}
 
 	var pos []models.Positions
-	err = json.Unmarshal([]byte(beforeTSP.Payload), &pos)
+	err := json.Unmarshal([]byte(beforeTSP.Payload), &pos)
 	if err != nil {
 		return
 	}
@@ -69,5 +70,32 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 		Margin:   account.Margin,
 		Payload:  string(marshal),
 	})
+	s.createLastTimeSeriesPosition(clientID)
 	return
+}
+
+func (s *Storage) getLastTimeSeriesPosition(clientID string) *models.TimeSeriesPosition {
+	result, err := s.cache.Get(context.TODO(), clientID+"TimeSeriesPosition").Result()
+	if err == nil {
+		var tsp models.TimeSeriesPosition
+		if err := json.Unmarshal([]byte(result), &tsp); err == nil {
+			return &tsp
+		}
+	}
+
+	return nil
+}
+
+func (s *Storage) createLastTimeSeriesPosition(clientID string) {
+	var beforeTSP models.TimeSeriesPosition
+	err := s.db.Model(&models.TimeSeriesPosition{}).
+		Where("client_id = ?", clientID).
+		Order("created_at desc").Limit(1).First(&beforeTSP).Error
+	if err != nil {
+		return
+	}
+	marshal, err := json.Marshal(beforeTSP)
+	if err == nil {
+		s.cache.SetEx(context.TODO(), clientID+"TimeSeriesPosition", marshal, time.Hour*24*30)
+	}
 }
