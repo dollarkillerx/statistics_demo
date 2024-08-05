@@ -296,3 +296,6 @@ class MT5utils:
 
     def symbol_info(self, symbol):
         return mt5.symbol_info(self._get_currency_name(symbol))
+
+    def get_mt5(self):
+        return mt5
