@@ -346,14 +346,20 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         if response_body.data.open_positions:
             for pos in response_body.data.open_positions:
                 ex = False
-                # for position in positions:
-                #     if position.comment == str(pos.order_id):
-                #         ex = True
+                for position in positions:
+                    if position.comment == str(pos.order_id):
+                        ex = True
                 # 执行卖单
                 if ex == False:
                     current_timestamp = datetime.now().timestamp()
                     symbol = pos.symbol[0:len(pos.symbol)-1]
                     # print(pos.opening_time)
+                    print("*" * 10)
+                    print(round(pos.volume * self.multiple, 2))
+                    print(pos.volume)
+                    print(self.multiple)
+                    print("*" * 10)
+                    continue
                     print(pos.opening_time,"   ", pos.symbol,current_timestamp - pos.opening_time > 600)
                     if current_timestamp - pos.opening_time > 600:
                         continue
@@ -365,12 +371,7 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                         continue
                     # buy
 
-                    print("*"*10)
-                    print(round(pos.volume * self.multiple,2))
-                    print(pos.volume)
-                    print(self.multiple)
-                    print("*"*10)
-                    continue
+
                     if pos.direction == "BUY":
                         self.mt5.buy(symbol=symbol, volume=round(pos.volume * self.multiple,2), comment=str(pos.order_id))
                     # sell
