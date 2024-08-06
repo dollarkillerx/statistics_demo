@@ -364,6 +364,13 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                     if symbol_info.visible == False:
                         continue
                     # buy
+
+                    print("*"*10)
+                    print(round(pos.volume * self.multiple,2))
+                    print(pos.volume)
+                    print(self.multiple)
+                    print("*"*10)
+                    continue
                     if pos.direction == "BUY":
                         self.mt5.buy(symbol=symbol, volume=round(pos.volume * self.multiple,2), comment=str(pos.order_id))
                     # sell
