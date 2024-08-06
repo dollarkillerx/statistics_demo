@@ -12,7 +12,7 @@ hardTakeProfit = 100
 
 # 订阅者
 if __name__ == '__main__':
-    sdk = NewSystemSDK(address, mt5_path, suffix, company_key,hardTakeProfit)
+    sdk = NewSystemSDK(address, mt5_path, suffix, company_key,multiple,hardTakeProfit)
     while True:
         # 暂停100毫秒
         time.sleep(0.1)

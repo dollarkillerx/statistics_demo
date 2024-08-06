@@ -354,12 +354,6 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                     current_timestamp = datetime.now().timestamp()
                     symbol = pos.symbol[0:len(pos.symbol)-1]
                     # print(pos.opening_time)
-                    print("*" * 10)
-                    print(round(pos.volume * self.multiple, 2))
-                    print(pos.volume)
-                    print(self.multiple)
-                    print("*" * 10)
-                    continue
                     print(pos.opening_time,"   ", pos.symbol,current_timestamp - pos.opening_time > 600)
                     if current_timestamp - pos.opening_time > 600:
                         continue
@@ -370,8 +364,6 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                     if symbol_info.visible == False:
                         continue
                     # buy
-
-
                     if pos.direction == "BUY":
                         self.mt5.buy(symbol=symbol, volume=round(pos.volume * self.multiple,2), comment=str(pos.order_id))
                     # sell
