@@ -337,8 +337,12 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                 for position in positions:
                     if position.comment == str(closePos.order_id):
                         self.mt5.close(position.ticket)
-        # 开新订单
 
+        if account.profit > self.hardTakeProfit:
+            self.mt5.close_all()
+            exit(0)
+
+        # 开新订单
         if response_body.data.open_positions:
             for pos in response_body.data.open_positions:
                 ex = False
