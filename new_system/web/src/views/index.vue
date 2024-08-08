@@ -15,7 +15,8 @@ const columns = createColumns({
     if (resp instanceof Ok) {
       tasks.value = resp.value;
     }
-
+  },
+  async chat(row: TaskAccountItem) {
     chartOptions.value = {
       chart: {
         id: 'vuechart-example'
@@ -24,8 +25,7 @@ const columns = createColumns({
         categories: []
       }
     }
-    series.value = []
-
+  series.value = []
     const resp2 = await  GetChats(row.client_id)
     if (resp2 instanceof Ok) {
       chats.value = resp2.value
@@ -64,9 +64,10 @@ function formatDateTime(dateTimeString: string): string {
 }
 
 function createColumns({
-                         play
+                         play,chat
                        }: {
-  play: (row: TaskAccountItem) => void
+  play: (row: TaskAccountItem) => void,
+  chat: (row: TaskAccountItem) => void
 }): DataTableColumns<TaskAccountItem> {
   return [
     {
@@ -116,6 +117,22 @@ function createColumns({
             onClick: () => play(row)
           },
           { default: () => "统计分析" }
+        );
+      }
+    },
+    {
+      title: "图表",
+      key: "id",
+      render(row) {
+        return h(
+            NButton,
+            {
+              strong: true,
+              tertiary: true,
+              size: "small",
+              onClick: () => chat(row)
+            },
+            { default: () => "图表" }
         );
       }
     }
