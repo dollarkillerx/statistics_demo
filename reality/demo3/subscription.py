@@ -6,7 +6,7 @@ address = "http://192.168.40.238:8181"
 mt5_path = "C:\\Users\\Administrator\\Desktop\\MT4\\terminal64.exe"
 suffix = "m"
 company_key = "exness"
-subscription_client_id = "hfm.45906394"
+subscription_client_id = "exness.76667118"
 multiple=2.5
 hardTakeProfit = 100
 
