@@ -82,6 +82,7 @@ class MT5utils:
                 "type_time": mt5.ORDER_TIME_GTC,  # 订单将一直保留在队列中，直到手动取消
                 "type_filling": mt5.ORDER_FILLING_FOK,  # 不满足条件不执行
             }
+            print(self._get_currency_name(symbol))
             if sl != 0:
                 request['sl'] = price - sl * point * 10
             if tp != 0:
@@ -110,6 +111,7 @@ class MT5utils:
             if deviation == 0:
                 deviation = self.deviation
             point = self._get_symbol_info(symbol).point
+            print(self._get_currency_name(symbol))
             price = mt5.symbol_info_tick(self._get_currency_name(symbol)).bid
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
@@ -297,5 +299,58 @@ class MT5utils:
     def symbol_info(self, symbol):
         return mt5.symbol_info(self._get_currency_name(symbol))
 
+
+    # 獲取所有訂單更具方向
+    def positions_get_by_type(self,orderType="buy", symbol=""):
+        # ticket: id
+        # time: unix
+        # type: 0buy 1sell
+        # magic:
+        # volume:
+        # sl
+        # tp
+        # price_open 开户价格
+        # price_current 当前价格
+        # swap 库存费
+        # comment
+        # profit
+        positions = ()
+        if symbol != "":
+            symbol = self._get_currency_name(symbol)
+            positions = mt5.positions_get(symbol=symbol)
+            if positions is None:
+                raise ValueError("error: {} {}".format(mt5.last_error(), symbol))
+        else:
+            positions = mt5.positions_get()
+            if positions is None:
+                raise ValueError("error: {} {}".format(mt5.last_error(), symbol))
+
+        positions = [pos for pos in positions if pos.magic == self.magic]
+        if orderType == "buy":
+            positions = [pos for pos in positions if pos.type == 0]
+        else:
+            positions = [pos for pos in positions if pos.type == 1]
+
+        return positions
+
+    # 關閉所有訂單 更具方向
+    def close_all_by_order_type(self, orderType = "buy", symbol=""):
+        positions = self.positions_get_by_type(orderType=orderType, symbol=symbol)
+        if positions is not None:
+            for pos in positions:
+                self.close(pos.ticket)
+
+
+    # 獲取某個方向的盈利
+    def profit_by_order_type(self, orderType="buy", symbol=""):
+        profit = 0
+        positions = self.positions_get_by_type(orderType=orderType, symbol=symbol)
+        if positions is not None:
+            for pos in positions:
+                profit += pos.profit
+        return profit
+
+
     def get_mt5(self):
         return mt5
+
