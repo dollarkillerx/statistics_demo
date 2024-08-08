@@ -23,6 +23,7 @@ func (a *ApiServer) Router() {
 		api.GET("/accounts", a.accounts)
 		// account 账户的信息
 		api.GET("/account/:account", a.account)
+		api.GET("/account/charts/:account", a.chartsAccount)
 	}
 }
 
