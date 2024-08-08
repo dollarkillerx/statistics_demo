@@ -4,7 +4,7 @@ from sdk import NewSystemSDK
 
 address = "http://192.168.40.238:8181"
 mt5_path = "C:\\Users\\Administrator\\Desktop\\MT5\\terminal64.exe"
-suffix = "c"
+suffix = "m"
 company_key = "exness"
 
 # 发布者

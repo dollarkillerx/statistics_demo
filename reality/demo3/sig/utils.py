@@ -58,9 +58,9 @@ class MT5utils:
     def _get_symbol_info(self, symbol):
         symbol_info = mt5.symbol_info(self._get_currency_name(symbol))
         if symbol_info is None:
-            raise ValueError("symbol invalid")
+            raise ValueError("symbol invalid" + self._get_currency_name(symbol))
         if not symbol_info.visible:
-            raise ValueError("symbol invalid")
+            raise ValueError("symbol invalid.visible")
         return symbol_info
 
     # buy 市价
