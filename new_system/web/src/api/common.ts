@@ -117,7 +117,7 @@ class HttpClient {
   }
 }
 
-export const httpClient = new HttpClient('http://192.168.40.238:8181', {
+export const httpClient = new HttpClient('', {
   'Content-Type': 'application/json',
   // 'Authorization': 'Bearer YOUR_TOKEN_HERE',
 });
