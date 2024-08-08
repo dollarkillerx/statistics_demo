@@ -97,3 +97,41 @@ export const GetTaskByAccount = async (account: String): Promise<Result<Task, st
     return err("Server request failed");
   }
 }
+
+export interface ChatItem {
+  ID: number
+  CreatedAt: string
+  UpdatedAt: string
+  DeletedAt: any
+  client_id: string
+  account: number
+  leverage: number
+  server: string
+  company: string
+  balance: number
+  profit: number
+  margin: number
+}
+
+export const GetChats = async (account: String): Promise<Result<ChatItem[], string>> => {
+  try {
+    const resp = await httpClient.get(`/api/account/charts/${account}`);
+
+    // 将 resp 转换为 ResponsePayload 类型
+    const value = resp as ResponsePayload<ChatItem[]>;
+
+    if (value.code !== 200) {
+      console.log(value);
+      return err(value.msg || "Unknown error");
+    }
+
+    if (!value.data) {
+      return err("No data received");
+    }
+
+    return ok(value.data);
+  } catch (error) {
+    console.log(error);
+    return err("Server request failed");
+  }
+}

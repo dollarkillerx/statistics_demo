@@ -14,7 +14,7 @@ type TimeSeriesPosition struct {
 	Profit   float64 `json:"profit" gorm:"column:profit;type:decimal(20,8);not null"`      // 利润
 	Margin   float64 `json:"margin" gorm:"column:margin;type:decimal(20,8);not null"`      // 预付款
 
-	Payload string `json:"payload" gorm:"column:payload;type:text;not null"` // 时序数据
+	Payload string `json:"-" gorm:"column:payload;type:text;not null"` // 时序数据
 }
 
 func (TimeSeriesPosition) TableName() string {

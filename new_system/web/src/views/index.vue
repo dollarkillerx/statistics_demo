@@ -1,24 +1,67 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { h, onMounted, ref, Text } from "vue";
+import { h, onMounted, ref } from "vue";
 import type { DataTableColumns } from "naive-ui";
 import { NButton } from "naive-ui";
-import { GetTaskByAccount, TaskAccount,  } from "@/api/task";
+import {type ChatItem, GetChats, GetTaskByAccount, TaskAccount,} from "@/api/task";
 import type {Task,TaskAccountItem} from "@/api/task";
 import { Ok } from "@/api/common";
 
 const data = ref<TaskAccountItem[]>([]);
 const tasks = ref<Task>()
+const chats = ref<ChatItem[]>([])
 const columns = createColumns({
   async play(row: TaskAccountItem) {
-    // message.info(`Play ${row.id}`);
     const resp = await GetTaskByAccount(row.client_id);
     if (resp instanceof Ok) {
       tasks.value = resp.value;
-      console.log(tasks.value);
+    }
+
+    chartOptions.value = {
+      chart: {
+        id: 'vuechart-example'
+      },
+      xaxis: {
+        categories: []
+      }
+    }
+    series.value = []
+
+    const resp2 = await  GetChats(row.client_id)
+    if (resp2 instanceof Ok) {
+      chats.value = resp2.value
+      console.log(chats.value)
+
+      let r = {
+        name: 'series-1',
+        data: []
+      }
+
+      chats.value.forEach((item)=>{
+        console.log(formatDateTime(item.CreatedAt))
+        chartOptions.value.xaxis.categories.push(formatDateTime(item.CreatedAt))
+        r.data.push(item.profit)
+      })
+
+      series.value.push(r)
     }
   }
 });
+
+function formatDateTime(dateTimeString: string): string {
+  // 创建一个 Date 对象
+  const date = new Date(dateTimeString);
+
+  // 获取年、月、日、小时、分钟和秒
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+
+  // 格式化日期时间字符串
+  return `${day} ${hours}:${minutes}`;
+}
 
 function createColumns({
                          play
@@ -83,7 +126,7 @@ onMounted(async () => {
   const resp = await TaskAccount();
   if (resp instanceof Ok) {
     data.value = resp.value;
-    console.log(data.value);
+    // console.log(data.value);
   }
 });
 
@@ -97,6 +140,17 @@ const formatDate = (timestamp: number) => {
   const seconds = ('0' + date.getSeconds()).slice(-2);
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
+const chartOptions =  ref({
+  chart: {
+    id: 'vuechart-example'
+  },
+  xaxis: {
+    categories: []
+  }
+})
+
+const series =  ref([])
 
 </script>
 
@@ -121,7 +175,7 @@ const formatDate = (timestamp: number) => {
     </div>
 
 
-    <div v-if="tasks" class="bg-white my-3 rounded-xl p-1">
+    <div class="bg-white my-3 rounded-xl p-1">
       <div class="text-2xl ">当前持仓: </div>
       <n-table :bordered="false" :single-line="false">
         <thead>
@@ -138,24 +192,27 @@ const formatDate = (timestamp: number) => {
         </tr>
         </thead>
         <tbody>
-        <tr v-for="item in tasks.positions" :key="item.id">
-          <td>{{ item.order_id }}</td>
-          <td>{{ formatDate(item.opening_time) }}</td>
-          <td>{{ item.direction }}</td>
-          <td>{{ item.symbol }}</td>
-          <td>{{ item.open_price }}</td>
-          <td>{{ item.volume }}</td>
-          <td>{{ item.market }}</td>
-          <td>{{ item.profit }}</td>
-          <td>{{ item.common }}</td>
-        </tr>
-
+          <tr v-for="item in tasks.positions" :key="item.id">
+            <td>{{ item.order_id }}</td>
+            <td>{{ formatDate(item.opening_time) }}</td>
+            <td>{{ item.direction }}</td>
+            <td>{{ item.symbol }}</td>
+            <td>{{ item.open_price }}</td>
+            <td>{{ item.volume }}</td>
+            <td>{{ item.market }}</td>
+            <td>{{ item.profit }}</td>
+            <td>{{ item.common }}</td>
+          </tr>
         </tbody>
       </n-table>
+    </div>
+
+    <div>
+      <apexchart type="area" height="350" :options="chartOptions" :series="series"></apexchart>
     </div>
   </div>
 </template>
 
-<style scoped lang="less">
+<style scoped>
 
 </style>

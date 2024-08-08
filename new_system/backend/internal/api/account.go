@@ -86,3 +86,16 @@ func (a *ApiServer) account(ctx *gin.Context) {
 		"profits":   profitData,
 	})
 }
+
+func (a *ApiServer) chartsAccount(ctx *gin.Context) {
+	param := strings.TrimSpace(ctx.Param("account"))
+
+	if param == "" {
+		resp.Return(ctx, 200, "key is null", nil)
+		return
+	}
+
+	var tsp []models.TimeSeriesPosition
+	a.storage.DB().Model(&models.TimeSeriesPosition{}).Where("client_id = ? ", param).Where("created_at > ?", time.Now().Add(-time.Hour*24*3)).Find(&tsp)
+	resp.Return(ctx, 200, "ok", tsp)
+}

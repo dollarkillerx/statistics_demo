@@ -122,4 +122,9 @@ export const httpClient = new HttpClient('', {
   // 'Authorization': 'Bearer YOUR_TOKEN_HERE',
 });
 
+// export const httpClient = new HttpClient('http://githubx.tailbd724f.ts.net', {
+//   'Content-Type': 'application/json',
+//   // 'Authorization': 'Bearer YOUR_TOKEN_HERE',
+// });
+
 // 192.168.40.238
