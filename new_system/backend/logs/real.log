@@ -123,3 +123,9 @@
 {"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/common/pkg/logs/log.go:30","message":"Logger initialized"}
 {"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/backend/cmd/main.go:60","message":"OpenTelemetry initialized"}
 {"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/backend/cmd/main.go:74","message":"Storage initialized"}
+{"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/common/pkg/logs/log.go:30","message":"Logger initialized"}
+{"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/backend/cmd/main.go:60","message":"OpenTelemetry initialized"}
+{"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/backend/cmd/main.go:74","message":"Storage initialized"}
+{"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/common/pkg/logs/log.go:30","message":"Logger initialized"}
+{"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/backend/cmd/main.go:60","message":"OpenTelemetry initialized"}
+{"level":"info","caller":"/home/githubx/workspace/go_dev/statistics_demo/new_system/backend/cmd/main.go:74","message":"Storage initialized"}

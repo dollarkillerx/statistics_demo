@@ -37,7 +37,7 @@ const columns = createColumns({
       }
 
       chats.value.forEach((item)=>{
-        console.log(formatDateTime(item.CreatedAt))
+        // console.log(formatDateTime(item.CreatedAt))
         chartOptions.value.xaxis.categories.push(formatDateTime(item.CreatedAt))
         r.data.push(item.profit)
       })
