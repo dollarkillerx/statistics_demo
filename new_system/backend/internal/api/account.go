@@ -96,6 +96,11 @@ func (a *ApiServer) chartsAccount(ctx *gin.Context) {
 	}
 
 	var tsp []models.TimeSeriesPosition
-	a.storage.DB().Model(&models.TimeSeriesPosition{}).Where("client_id = ? ", param).Where("created_at > ?", time.Now().Add(-time.Hour*24*1)).Find(&tsp)
+	//a.storage.DB().Model(&models.TimeSeriesPosition{}).
+	//	Where("client_id = ? ", param).
+	//	Where("created_at > ?", time.Now().Add(-time.Hour*24*1)).Find(&tsp)
+
+	a.storage.DB().Model(&models.TimeSeriesPosition{}).
+		Where("client_id = ? ", param).Order("created_at desc").Limit(500).Find(&tsp)
 	resp.Return(ctx, 200, "ok", tsp)
 }
