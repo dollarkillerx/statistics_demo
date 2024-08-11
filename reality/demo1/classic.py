@@ -129,6 +129,9 @@ class Classic:
                 else:
                     self.direction = "sell"
 
+                # 后面删除
+                self.direction = "sell"
+
                 # 加仓
                 price = 0
                 if self.direction == "buy":
