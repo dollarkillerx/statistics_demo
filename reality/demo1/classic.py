@@ -123,6 +123,12 @@ class Classic:
                     print("----------------new-----------------")
                     continue
 
+                # 保持交易一致性
+                if last_position.type == 0:
+                    self.direction = "buy"
+                else:
+                    self.direction = "sell"
+
                 # 加仓
                 price = 0
                 if self.direction == "buy":
