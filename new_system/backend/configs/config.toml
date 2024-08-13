@@ -3,14 +3,14 @@ Port="8182"
 Debug=true
 
 [PostgresConfiguration]
-Host="192.168.40.198"
+Host="win-r872mplp9ik.tailbd724f.ts.net"
 Port=5532
 User="root"
 Password="L8onP2L3"
 DBName="trade"
 
 [RedisConfiguration]
-Addr="192.168.40.198:6379"
+Addr="win-r872mplp9ik.tailbd724f.ts.net:6379"
 Db=1
 
 [LoggerConfiguration]
@@ -19,12 +19,12 @@ Level="debug"
 
 [OpenTelemetryConfiguration]
 [OpenTelemetryConfiguration.Traces]
-HTTPEndpoint = "192.168.40.198:5081"
+HTTPEndpoint = "win-r872mplp9ik.tailbd724f.ts.net:5081"
 Path="/api/default/traces"
 Authorization = "Basic Z29vZ2xlQGdvb2dsZS5jb206UHZmS0hvQ05vMXc0bHk5SQ=="
 
 [OpenTelemetryConfiguration.Logs]
-HTTPEndpoint = "http://192.168.40.198:5081/api/default/real/_json"
+HTTPEndpoint = "http://win-r872mplp9ik.tailbd724f.ts.net:5081/api/default/real/_json"
 User="google@google.com"
 Password="PvfKHoCNo1w4ly9I"
 File="logs/real.log"
