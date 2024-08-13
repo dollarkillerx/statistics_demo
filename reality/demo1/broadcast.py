@@ -2,7 +2,7 @@ import time
 
 from sdk import NewSystemSDK
 
-address = "http://win-r872mplp9ik.tailbd724f.ts.net:8182"
+address = "http://github.tailbd724f.ts.net:8182"
 mt5_path = "C:\\Users\\Administrator\\Desktop\\MT2\\terminal64.exe"
 suffix = "c"
 company_key = "hfm"

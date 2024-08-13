@@ -1,7 +1,7 @@
 version: "3.3"
 services:
   new_system:
-    image: win-r872mplp9ik.tailbd724f.ts.net:5000/new_system:1.0.0
+    image: github.tailbd724f.ts.net:5000/new_system:1.0.0
     container_name: new_system
     restart: always
     ports:
