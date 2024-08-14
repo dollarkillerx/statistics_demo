@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/xid"
 	"math"
 	"time"
 
@@ -26,6 +27,9 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 	if beforeTSP == nil {
 		marshal, _ := json.Marshal(positions)
 		s.db.Model(&models.TimeSeriesPosition{}).Create(&models.TimeSeriesPosition{
+			BaseModel: models.BaseModel{
+				ID: xid.New().String(),
+			},
 			ClientID: clientID,
 			Account:  account.Account,
 			Leverage: account.Leverage,
@@ -60,6 +64,9 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 	// save
 	marshal, _ := json.Marshal(positions)
 	s.db.Model(&models.TimeSeriesPosition{}).Create(&models.TimeSeriesPosition{
+		BaseModel: models.BaseModel{
+			ID: xid.New().String(),
+		},
 		ClientID: clientID,
 		Account:  account.Account,
 		Leverage: account.Leverage,

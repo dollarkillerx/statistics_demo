@@ -1,10 +1,8 @@
 package models
 
-import "gorm.io/gorm"
-
 // TimeSeriesPosition 时间序列持仓
 type TimeSeriesPosition struct {
-	gorm.Model
+	BaseModel
 	ClientID string  `json:"client_id" gorm:"column:client_id;type:varchar(255);not null"` // company.account: exness.10086
 	Account  int64   `json:"account" gorm:"column:account;type:bigint;not null"`           // 账户
 	Leverage int64   `json:"leverage" gorm:"column:leverage;type:int;not null"`            // 杠杆
