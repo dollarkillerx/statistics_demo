@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/xid"
+	"log"
 	"math"
 	"time"
 
@@ -24,9 +25,9 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 	}
 
 	beforeTSP := s.getLastTimeSeriesPosition(clientID)
-	if beforeTSP == nil {
+	if beforeTSP == nil || beforeTSP.Payload == "" {
 		marshal, _ := json.Marshal(positions)
-		s.db.Model(&models.TimeSeriesPosition{}).Create(&models.TimeSeriesPosition{
+		err := s.db.Model(&models.TimeSeriesPosition{}).Create(&models.TimeSeriesPosition{
 			BaseModel: models.BaseModel{
 				ID: xid.New().String(),
 			},
@@ -39,7 +40,12 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 			Profit:   account.Profit,
 			Margin:   account.Margin,
 			Payload:  string(marshal),
-		})
+		}).Error
+
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
 		s.createLastTimeSeriesPosition(clientID)
 		return
@@ -48,6 +54,9 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 	var pos []models.Positions
 	err := json.Unmarshal([]byte(beforeTSP.Payload), &pos)
 	if err != nil {
+		//log.Println(beforeTSP)
+		//log.Println(beforeTSP.Payload)
+		//log.Println(err)
 		return
 	}
 
@@ -56,6 +65,10 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 	}
 
 	if after == before {
+		//fmt.Println("-----------------------------------------------------")
+		//fmt.Println("account.Profit", account.Profit)
+		//fmt.Println("beforeTSP.Profit", beforeTSP.Profit)
+		//fmt.Println("-----------------------------------------------------")
 		if math.Abs(float64(account.Profit)-float64(beforeTSP.Profit)) < 2 {
 			return
 		}
@@ -63,7 +76,7 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 
 	// save
 	marshal, _ := json.Marshal(positions)
-	s.db.Model(&models.TimeSeriesPosition{}).Create(&models.TimeSeriesPosition{
+	err = s.db.Model(&models.TimeSeriesPosition{}).Create(&models.TimeSeriesPosition{
 		BaseModel: models.BaseModel{
 			ID: xid.New().String(),
 		},
@@ -76,7 +89,11 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 		Profit:   account.Profit,
 		Margin:   account.Margin,
 		Payload:  string(marshal),
-	})
+	}).Error
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	s.createLastTimeSeriesPosition(clientID)
 	return
 }
