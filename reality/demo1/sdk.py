@@ -1,10 +1,6 @@
 import random
-import time
-
 import requests
-
 import utils
-import pandas as pd
 from datetime import datetime, timedelta
 import json
 
@@ -197,12 +193,14 @@ class ResponseBody(BaseModel):
 
 
 class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
-    def __init__(self, address: str, mt5_path: str, suffix="", company_key=""):
+    def __init__(self, address: str, mt5_path: str, suffix="", company_key="",multiple=1,hardTakeProfit=0):
         self.address = address
         self.mt5_path = mt5_path
         self.suffix = suffix
         self.mt5 = utils.MT5utils(path=mt5_path)
         self.mt5.set_currency_suffix(suffix)
+        self.multiple = multiple
+        self.hardTakeProfit = hardTakeProfit
         account = self.mt5.get_mt5().account_info()
         self.client_id = company_key + "." + str(account.login)
         self.Account = Account(account.login, account.leverage, account.server, account.company, account.balance,
@@ -328,12 +326,9 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         response = requests.post(self.address + "/ea/subscription", data=json.dumps(rj),
                                  headers={"Content-Type": "application/json"})
         print(response.status_code, "   ", random.Random().randint(0, 10))
-        # print(type(response.text))
-        # print(response.text)
-        # json parse
+
         response_body = ResponseBody.parse_raw(response.text)
-        # print(response_body.data.close_position)
-        # 执行买单
+
         positions = self.mt5.positions_get()
 
         # 关闭订单
@@ -342,8 +337,12 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                 for position in positions:
                     if position.comment == str(closePos.order_id):
                         self.mt5.close(position.ticket)
-        # 开新订单
 
+        if account.profit > self.hardTakeProfit:
+            self.mt5.close_all()
+            exit(0)
+
+        # 开新订单
         if response_body.data.open_positions:
             for pos in response_body.data.open_positions:
                 ex = False
@@ -366,7 +365,7 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                         continue
                     # buy
                     if pos.direction == "BUY":
-                        self.mt5.buy(symbol=symbol, volume=pos.volume, comment=str(pos.order_id))
+                        self.mt5.buy(symbol=symbol, volume=round(pos.volume * self.multiple,2), comment=str(pos.order_id))
                     # sell
                     if pos.direction == "SELL":
-                        self.mt5.sell(symbol=symbol, volume=pos.volume, comment=str(pos.order_id))
+                        self.mt5.sell(symbol=symbol, volume=round(pos.volume * self.multiple,2), comment=str(pos.order_id))
