@@ -3,7 +3,7 @@ import time
 from sdk import NewSystemSDK
 
 address = "http://127.0.0.1:5800"
-mt5_path = ""
+mt5_path = "C:\\Program Files\\MetaTrader 5\\terminal64.exe"
 suffix = ""
 company_key = "test"
 

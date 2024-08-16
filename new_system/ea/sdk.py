@@ -266,7 +266,7 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         response = requests.post(self.address + "/ea/broadcast", data=json.dumps(r.to_dict()),
                                  headers={"Content-Type": "application/json"})
 
-        print(response.status_code, "   ", random.Random().randint(0, 10))
+        print(len(positions)," ",response.status_code, "   ", random.Random().randint(0, 10))
 
     def subscription(self, subscription_client_id, strategy_code="Reverse"):
         resPos = []
