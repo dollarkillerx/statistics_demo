@@ -328,12 +328,10 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         response = requests.post(self.address + "/ea/subscription", data=json.dumps(rj),
                                  headers={"Content-Type": "application/json"})
         print(response.status_code, "   ", random.Random().randint(0, 10))
-        # print(type(response.text))
-        # print(response.text)
-        # json parse
+        print(response.text)
+
         response_body = ResponseBody.parse_raw(response.text)
-        # print(response_body.data.close_position)
-        # 执行买单
+
         positions = self.mt5.positions_get()
 
         # 关闭订单
@@ -353,16 +351,15 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
                 # 执行卖单
                 if ex == False:
                     current_timestamp = datetime.now().timestamp()
-                    symbol = pos.symbol[0:len(pos.symbol)-1]
-                    # print(pos.opening_time)
-                    print(pos.opening_time,"   ", pos.symbol,current_timestamp - pos.opening_time > 600)
+                    symbol = pos.symbol
+                    if self.suffix != "":
+                        symbol = pos.symbol[0:len(pos.symbol)-1]
+                    print(pos.opening_time,"   ", pos.symbol,current_timestamp - pos.opening_time > 600, "  ",current_timestamp)
                     if current_timestamp - pos.opening_time > 600:
                         continue
 
                     symbol_info = self.mt5.symbol_info(symbol)
                     if symbol_info is None:
-                        continue
-                    if symbol_info.visible == False:
                         continue
                     # buy
                     if pos.direction == "BUY":

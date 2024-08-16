@@ -52,6 +52,8 @@ class MT5utils:
 
     # [内部] 获取货币名称
     def _get_currency_name(self, symbol):
+        if self.currency_suffix == "":
+            return symbol
         return '{}{}'.format(symbol, self.currency_suffix)
 
     # [内部] symbol_info
