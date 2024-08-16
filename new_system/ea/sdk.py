@@ -328,7 +328,6 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         response = requests.post(self.address + "/ea/subscription", data=json.dumps(rj),
                                  headers={"Content-Type": "application/json"})
         print(response.status_code, "   ", random.Random().randint(0, 10))
-        print(response.text)
 
         response_body = ResponseBody.parse_raw(response.text)
 
