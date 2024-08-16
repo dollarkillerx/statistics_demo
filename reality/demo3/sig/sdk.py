@@ -236,7 +236,7 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
         end_time = current_time
 
         # 获取历史交易记录
-        deals = self.mt5.get_mt5().history_orders_get(start_time, end_time)
+        deals = self.mt5.get_mt5().history_orders_get(start_time, end_time + timedelta(days=3))
 
         cm = {}
         history = []
