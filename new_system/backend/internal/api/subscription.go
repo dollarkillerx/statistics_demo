@@ -28,8 +28,6 @@ func (a *ApiServer) subscription(ctx *gin.Context) {
 	// 3. 更新历史订单
 	// 3. 更新历史订单
 	history, _ := preprocessing.HistoryToHistory(input.History)
-	a.storage.UpdateHistory(input.ClientID, history)
-	a.storage.UpdateHistory(input.ClientID, history)
 
 	a.storage.UpdateHistory(input.ClientID, history)
 
