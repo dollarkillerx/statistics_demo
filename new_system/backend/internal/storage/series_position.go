@@ -54,9 +54,6 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 	var pos []models.Positions
 	err := json.Unmarshal([]byte(beforeTSP.Payload), &pos)
 	if err != nil {
-		//log.Println(beforeTSP)
-		//log.Println(beforeTSP.Payload)
-		//log.Println(err)
 		return
 	}
 
@@ -65,10 +62,6 @@ func (s *Storage) TimeSeriesPosition(clientID string, account models.Account, po
 	}
 
 	if after == before {
-		//fmt.Println("-----------------------------------------------------")
-		//fmt.Println("account.Profit", account.Profit)
-		//fmt.Println("beforeTSP.Profit", beforeTSP.Profit)
-		//fmt.Println("-----------------------------------------------------")
 		if math.Abs(float64(account.Profit)-float64(beforeTSP.Profit)) < 2 {
 			return
 		}
