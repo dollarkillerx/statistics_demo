@@ -94,6 +94,9 @@ function createColumns({
       title: "余额",
       key: "balance",
       render(row) {
+        if (typeof row.balance == "string") {
+          return "$" + row.balance
+        }
         return "$" + row.balance.toFixed(2)
       }
     },
@@ -101,6 +104,9 @@ function createColumns({
       title: "持仓盈亏",
       key: "profit",
       render(row) {
+        if (typeof row.profit == "string") {
+          return "$" + row.profit
+        }
         return "$" +row.profit.toFixed(2)
       }
     },
