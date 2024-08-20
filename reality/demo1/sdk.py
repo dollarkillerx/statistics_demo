@@ -342,7 +342,11 @@ class NewSystemSDK:  # NEW_SYSTEM_SDK_CLASS
             self.mt5.close_all()
             exit(0)
 
-        # 开新订单
+            # 当只有一个订单时不开仓
+        if len(response_body.data.open_positions) <= 1:
+            return
+
+            # 开新订单
         if response_body.data.open_positions:
             for pos in response_body.data.open_positions:
                 ex = False
